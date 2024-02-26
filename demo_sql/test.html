@@ -1,0 +1,138 @@
+<html>
+<head>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/json.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/sql.min.js"></script>
+    <script>hljs.highlightAll();</script>
+    <style>
+        body {
+            background-color: #1f1f1f;
+            color: white;
+            font-family: 'SF Pro';
+        }
+
+        .input-area {
+            position: relative;
+            outline: none;
+            height: 20%;
+            background-color: #282c34;
+        }
+
+        .stack {
+            position: absolute;
+            display: inline-block;
+            padding: 1em;
+            bottom: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        .preview {
+            background: transparent;
+            z-index: 3;
+        }
+
+        .textarea {
+            color: transparent;
+            background: none;
+            z-index: 3;
+
+            margin: 0;
+            border: none;
+            border-radius: 0;
+            outline: none;
+            appearance: none;
+        }
+
+        .cursor {
+            background: none;
+            z-index: 1;
+    
+            margin: 0;
+            border: none;
+            border-radius: 0;
+            outline: none;
+            appearance: none;
+        }
+
+        .preview, textarea {
+            font-size: 17px;
+            font-weight: 200;
+            font-family: 'Courier New', Courier, monospace;
+        }
+    </style>
+</head>
+<body>
+    <h2>SQL Playground</h2>
+    <form id="form">
+        <label for="query" style="margin: 0.5em;">Query:</label>
+        <br>
+        <div class="input-area">
+            <textarea name="query" id="query" class="stack textarea" autofocus></textarea>
+            <textarea id="cursor" class="stack cursor"></textarea>
+            <pre><code id="preview" class="stack preview language-sql"></code></pre>
+        </div>        
+        <!-- <textarea name="query" style="width: 90%; height: 20%; margin: 0.5em; font-family: courier; font-size: 0.85em;">SELECT * FROM FrameOCR LIMIT 10;</textarea> -->
+        <br>
+        <label for="db" style="margin: 0.5em;">Database:</label>
+        <input type="radio" id="main" name="db" value="main" checked />
+        <label for="main">Main</label>
+        <input type="radio" id="extras" name="db" value="extras" />
+        <label for="extras">Extras</label>
+        <br>
+        <button type="submit" style="margin: 0.5em; padding: 1em;">EXECUTE »</button>
+    </form>
+    <label style="margin: 0.5em;">Result:</label>
+    <br>
+    <pre style="font-size: 1em;">
+        <code class="language-json" id="result" style="margin: 0.75em; width: 100%; white-space: pre-wrap;">
+        [
+            {
+                "text": "•\nShoota\ndevelopment\n(m Rewind) = My Mac\n) OverlayRew…..Button.swift\n} CallMonitor.swift\nCallMonitor swift |M initidb:baseURL.)\n35 public class CallMonitor {\n73\npublic init(db: DatabasePool, baseURL: URL) {\n94\nreturn\n95\n96\n97\n98\n99\n100\n101\n102\n103\n104\n105\n106\n107\n}\n108\n109\n110\n111\n}\n112\n113\n114\n115\n116\n117\n118\n119\n190\nS) Recorder.swift\nS RecorderHandler.swift\nRunning Rift Rewind-dev\n335\n3) Communica...andler.swift\n/ NOTE: we start recording with all options enabled by default and cleanup everything 1€\n// Start recorder\nTask { [weak self] j\nguard let self €\nPreparing Rift Rewind...\nif let callId = self.callRecorder?.callID, callId != currentCall.callId {\n// Need to finalize audio session\nself._finalizeCall(callId)\nawait self.stopRecorder ()\nguard self.autostartRecording, !self.isRecording, let zoomApp = self.callDetector.zoc\nreturn\nawait self.startRecorder(callId: currentCall.callId, app: zoomApp, saveAudio: true,\npublic func pause () {\ncallDetector.stopMonitoring ()\nstanAndinSessiont )\n1 10 8\n8\nm Rift Rewind-dev\n\"ORATIS MOTION\nVIMASTAN\n2023-05-04 16:52:31.571193+0100 Rift Rewind-dev [88258:1084824] [Lifecycle] startMeta\n2023-05-04 16:52:31.571195+0100 Rift Rewind-dev [88258:1084824] [Lifecycle] Opening database\n2023-05-04 16:52:31.574947+0100 Rift Rewind-dev [88258:1084824] WebURL: preloading WebURL.ur1LookupDict\n2023-05-04 16:52:31.643145+0100 Rift Rewind-dev [88258:1084824] [Lifecycle] Starting recorder communicator\nrecorderProcess.service?.start...\n2023-05-04 16:52:31.643476+0100 Rift Rewind-dev [88258:1084824] [Lifecycle] Registering hotkeys\n2023-05-04 16:52:31.668765+0100 Rift Rewind-dev [88258:1084824] [window] Warning: -[NSWindow makeKeywindow] called o\n0x11e67de00 which returned NO from -[SWindow canBecomeKeyWindow].\nloadRecordings/Users/borkasm/Library/Application Support/Move37/ScreenomeX-dev/Recordings\nloadPts 5908\nloaded frames: 2476441 19811528\nloadPts count: 2476441, size:19811528\n2023-05-04 16:52:34.096124+0100 Rift Rewind-dev [88258:1084824] loadRecordings loadPts count:2476441, size:19811528\nUser Notifications.init\n2023-05-04 16:52:38.706787+0100 Rift Rewind-dev [88258:1084824] [Lifecycle] Performing misc spaces /analytics setup al\n2023-05-04 16:52:38.706804+0100 Rift Rewind-dev [88258:1084824] [ANALYTICS] Checking for merge with email: boris.kari\n2023-05-04 16:52:38.706829+0100 Rift Rewind-dev [88258:1084824] [ANALYTICS] Downloaded email not known; returning\n2023-05-04 16:52:38.707119+0100 Rift Rewind-dev [88258:1084824] BrowserTreesViewModel load data",
+                "applicationWindowID": 38310,
+                "url": null,
+                "id": 1,
+                "date": "2023-05-04 15:52:39.925",
+                "appName": "Telegram",
+                "title": "Telegram",
+                "bounds": null,
+                "bundleID": null
+            }
+        ]
+        </code>
+    </pre>
+    <script>
+        //  Element
+        var inputArea = document.getElementById("query");
+        var outputArea = document.getElementById("preview");
+        var cursor = document.getElementById("cursor");
+
+        outputArea.addEventListener("click", function (event) {
+            inputArea.style.zIndex = 4;
+            // inputArea.style.color = "black";
+        }, false);
+
+        inputArea.addEventListener("input", function (event) {
+            outputArea.innerHTML = inputArea.value;
+            inputArea.style.zIndex = 4;
+            refreshHighlighting();
+        }, false);
+
+        // Refresh highlighting when blured focus from textarea.
+        outputArea.addEventListener("blur", function (event) {
+            refreshHighlighting();
+        }, false)
+
+        function refreshHighlighting() {
+            outputArea.removeAttribute("data-highlighted");
+            hljs.highlightBlock(outputArea);
+            inputArea.style.zIndex = 0;
+            // inputArea.style.color = "transparent";
+        }
+
+        refreshHighlighting();
+    </script>
+</body>
+</html>

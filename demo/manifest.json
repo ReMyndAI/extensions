@@ -1,0 +1,6 @@
+{
+    "id": "764B0825-14F3-4CB2-BA06-28A7F831F5EA",
+    "name": "Demo Extension (basic)",
+    "description": "Counts every captured frames and displays them as a list of timestamps",
+    "version": "1.0.0"
+}

@@ -1,0 +1,17 @@
+{% if call['summary'] is string %}
+{{ call['summary'] }}
+{% elif call['summary'] %}
+  {% for topic in call['summary'] %}
+  {% if topic is string %}
+  <p>{{ topic }}</p>
+  {% else %}
+  <div class="topic" data-time="{{ topic['start'] - call['startDate'] }}">
+  <h3 class="topic-title"> ▫️ {{ topic['title'] }}</h3>
+  <p class="topic-text">{{ topic['summary'] }}</p>
+  </div>
+  {% endif %}
+  {% endfor %}
+{% else %}
+<p>Summary was not generated.</p>
+<a id="summary-button" href="#"">Create summary</a>
+{% endif %}

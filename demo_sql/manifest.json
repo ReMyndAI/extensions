@@ -1,0 +1,6 @@
+{
+    "id": "1B0B3AC2-493A-4242-9FB4-DFEABE6EF16A",
+    "name": "Demo Extension (SQL)",
+    "description": "Shows an HTML UI that executes arbitrary SQL queries",
+    "version": "1.0.0"
+}

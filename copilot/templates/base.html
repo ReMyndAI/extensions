@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{{ title }}</title>
+    {% block head %}
+    {% endblock %}
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: #1f1f1f;
+        }
+        {% block style %}
+        {% endblock %}
+    </style>
+  </head>
+  <body>
+    {% block content %}
+    {% endblock %}
+    <script>
+        layer1 = {};
+        layer1.post = function(obj) {
+            window.webkit.messageHandlers.layer1.postMessage(obj);
+        }
+        layer1.log = function(...args) {
+            layer1.post({ log: args });
+        };
+        console = console || {};
+        console.log = layer1.log;
+        {% block script %}
+        {% endblock %}
+    </script>
+  </body>
+</html>
