@@ -243,21 +243,6 @@ Below is a list of channels used to broadcast app-wide events. An extension may 
 ```
 </details>
 
-* `notificationCallback` Notifies when the user clicks a popup shown using `showNotification` function with some action data specified
-<details>
-<summary><b>Example</b> (click to expand)</summary>
-
-```JavaScript
-{
-    "action": {
-        // This could be any string data specified in showNotification function
-        "data": "[724724275, 724724276, 724724277, 724724278]"
-    },
-    "notificationID": "05707C81-9C2F-43AF-B595-8926BEEC94EC"
-}
-```
-</details>
-
 ## Messages channel
 
 The `messages` channel is used for one-to-one (app-to-extension or extension-to-app) messages. Each message contains an `event` field which contains the function name, and optional `data`.
@@ -277,6 +262,54 @@ In order to send a message to the `messages` channel use the `message_center.sen
     // window.webkit.messageHandlers.layer1.postMessage({ id: 'settings', close: true });
     "id": "settings",
     "close": true
+}
+```
+</details>
+
+* `notificationCallback` Notifies when the user clicks a popup shown using `showNotification` function with some action data specified
+<details>
+<summary><b>Example</b> (click to expand)</summary>
+
+```JavaScript
+{
+    "action": {
+        // This could be any string data specified in showNotification function
+        "data": "[724724275, 724724276, 724724277, 724724278]"
+    },
+    "notificationID": "05707C81-9C2F-43AF-B595-8926BEEC94EC"
+}
+```
+</details>
+
+* `goBack` Notifies that 'Back' button was pressed
+<details>
+<summary><b>Example</b> (click to expand)</summary>
+
+```JSON
+{
+    "windowID": 1234
+}
+```
+</details>
+
+* `nextItem` Notifies that 'Next' button was pressed
+<details>
+<summary><b>Example</b> (click to expand)</summary>
+
+```JSON
+{
+    "windowID": 1234
+}
+```
+</details>
+
+* `previousItem` Notifies that 'Previous' button was pressed
+<details>
+<summary><b>Example</b> (click to expand)</summary>
+
+```JSON
+{
+    "windowID": 1234
 }
 ```
 </details>
@@ -646,7 +679,7 @@ Response:
 ```
 </details>
 
-* `ui.openView` Open the Viewer.
+* `ui.openView` Open Viewer.
 
 <details>
 <summary><b>Example</b> (click to expand)</summary>
@@ -670,6 +703,31 @@ Response:
                 "endDate": 1702166400
             }
         ]   
+    }
+}
+```
+Response:
+```JSON
+"OK"
+```
+</details>
+
+* `ui.viewPosition` Set Viewer position (when it's on screen).
+
+<details>
+<summary><b>Example</b> (click to expand)</summary>
+
+```JavaScript
+{
+    "event": "ui.viewPosition",
+    "data": {
+        // Optional – Integer position for better precision
+        "position": 1021807592431, 
+        // Optional – Floating value timestamp
+        // timestamp = position / 600
+        "timestamp": 1703012654.0516667
+        // Optional - frame selection strategy (closest/leading/trailing)
+        "frame": "leading",
     }
 }
 ```
@@ -1019,3 +1077,55 @@ Response:
 "OK"
 ```
 </details>
+
+### `layerScript` functions
+
+* `layerScript.run` Set custom title of a call entity.
+<details>
+<summary><b>Example</b> (click to expand)</summary>
+
+```JavaScript
+{
+    "event": "layerScript.run",
+    "data": {
+        "scriptID": "0FFC00D4-4535-405F-9C6F-B10936E595EE",
+        "scriptInput": "1701279838"
+    }
+}
+```
+Response:
+```JSON
+{
+    "summary": "'[\n    {\n        \"start\": \"2023-10-02 16:32:01.713\",\n        \"end\": \"2023-10-02 16:34:11.651\",\n        \"title\": \"User Engagement and Feedback on New Release\",\n        \"summary\": \"The team discusses the user engagement metrics following the new version release, noting an increase in downloads and app usage. They observe that users are opening the app multiple times, indicating active use. The early feedback is considered significant, showing that the update has improved functionality.\"\n    },\n    {\n        \"start\": \"2023-10-02 16:34:20.714\",\n        \"end\": \"2023-10-02 16:37:28.994\",\n        \"title\": \"Technical Issues and Fixes\",\n        \"summary\": \"The team identifies a problem with the Auto Start feature not working as intended. They discuss the need to update the API to a newer version to ensure the app appears in the correct section of system settings for auto-starting. A fix has been submitted, and a new build is awaited to confirm the resolution. Action items include checking the preference settings for auto start and considering an explicit setting for this feature.\"\n    },\n    {\n        \"start\": \"2023-10-02 16:38:34.907\",\n        \"end\": \"2023-10-02 16:43:49.118\",\n        \"title\": \"Feature Enhancements and User Interaction\",\n        \"summary\": \"The team discusses potential enhancements, including tracking the usage of a floating button and adding a pop-up notification for paused activities. They consider drawing attention to the floating button to increase its use. Additionally, there\'s mention of updating the onboarding process with a placeholder for search results. Action items include tracking the floating button\'s usage and implementing the discussed enhancements.\"\n    }\n]'"
+}
+```
+</details>
+
+### `calls` functions
+
+* `calls.setTitle` Set custom title of a call entity.
+<details>
+<summary><b>Example</b> (click to expand)</summary>
+
+```JavaScript
+{
+    "event": "calls.setTitle",
+    "data": {
+        "callID": 1701279838,
+        "title": "Big Band Meeting"
+    }
+}
+```
+Response:
+```JSON
+"OK"
+```
+</details>
+
+## TODO
+
+ - Tips & Tricks
+   - JS log
+   - Setting up a LayerScript
+   - Embedding HTML images
+   - Call audio URLs
