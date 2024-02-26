@@ -287,7 +287,9 @@ In order to send a message to the `messages` channel use the `message_center.sen
 
 ```JSON
 {
-    "windowID": 1234
+    "windowID": 1234,
+    // Optional
+    "windowTag": "main"
 }
 ```
 </details>
@@ -298,7 +300,9 @@ In order to send a message to the `messages` channel use the `message_center.sen
 
 ```JSON
 {
-    "windowID": 1234
+    "windowID": 1234,
+    // Optional
+    "windowTag": "main"
 }
 ```
 </details>
@@ -309,7 +313,9 @@ In order to send a message to the `messages` channel use the `message_center.sen
 
 ```JSON
 {
-    "windowID": 1234
+    "windowID": 1234,
+    // Optional
+    "windowTag": "main"
 }
 ```
 </details>
@@ -320,7 +326,9 @@ In order to send a message to the `messages` channel use the `message_center.sen
 
 ```JSON
 {
-    "windowID": 1234
+    "windowID": 1234,
+    // Optional
+    "windowTag": "main"
 }
 ```
 </details>
