@@ -1,0 +1,6 @@
+{
+    "id": "2F329FE9-C57B-4927-B532-B01D42D9F0EF",
+    "version": "1.0.5",
+    "description": "Uses A.I. to generate summaries for Zoom calls, and displays the summary in a popup window automatically after the call ends.",
+    "name": "Call Summary Generator"
+}
