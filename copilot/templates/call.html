@@ -443,6 +443,14 @@
     flex-flow: column;
     flex: 1 1 auto;
     gap: 2px;
+    font-family: Avenir, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+      Ubuntu, "Helvetica Neue", Helvetica, Arial, "PingFang SC",
+      "Hiragino Sans GB", "Microsoft Yahei UI", "Microsoft Yahei",
+      "Source Han Sans CN", sans-serif;
+    font-size: 15px;
+    font-weight: 350;
+    letter-spacing: -0.6px;
+    color: #f1f1f1;
   }
   .path-indicator {
     display: flex;
@@ -694,24 +702,12 @@
       </div>
       <div class="divider"></div>
       <div class="scroll-content">
-        <div class="transcript-items">
-              {% for segment in call['transcription'] %}
-              <div class="transcript-section" data-time="{{ segment['startTimestamp'] - call['startDate'] }}">
-                  <div class="person">
-                      <div class="dot"></div>
-                      <span class="transcript-timestamp">{{ timeStr(segment['startTimestamp']) }}</span>
-                  </div>
-                  <div class="transcript-paragraph">
-                      <span class="transcript-paragraph-text">{{ segment['text'] }}</span>
-                  </div>
-              </div>
-              {% endfor %}
-
-              <div style="color:white;font-family:'Courier New',Courier,monospace;" id="ts"></div>
-        </div>
-        <div class="summary-content">
-          {% include "summary.html" %}
-        </div>
+          <div class="transcript-items">
+              {% include "transcription.html" %}
+          </div>
+          <div class="summary-content">
+              {% include "summary.html" %}
+          </div>
       </div>
     </div>
 </div>
@@ -722,11 +718,12 @@
     const startTime = {{ call['startDate'] }};
     const endTime = {{ call.get('endDate') or getTimestamp() }};
     const initialOffset = {{ offset }};
+
     const track = document.querySelector("audio");
     const tabs = document.querySelectorAll(".path-indicator");
-    const segments = document.querySelectorAll(".transcript-section");
-    const ts = document.getElementById("ts");
     const scrollView = document.querySelector(".scroll-content");
+
+    var segments = document.querySelectorAll(".transcript-section");
     var activeSegment = undefined;
     var activeTopic = undefined;
     var firstUpdate = true;
@@ -870,11 +867,16 @@
       };
     }
 
-    for (let s of segments) {
-        s.onclick = (event) => {
-            track.currentTime = Math.min(parseFloat(s.getAttribute("data-time")), track.duration);
-        };
+    function updateTranscript() {
+        segments = document.querySelectorAll(".transcript-section");
+        for (let s of segments) {
+            s.onclick = (event) => {
+                track.currentTime = Math.min(parseFloat(s.getAttribute("data-time")), track.duration);
+            };
+        }
     }
+
+    updateTranscript();
 
     function updateTopics() {
         for (let t of document.querySelectorAll(".topic-title")) {

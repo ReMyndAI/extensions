@@ -1,0 +1,15 @@
+{% if call['transcription'] %}
+{% for segment in call['transcription'] %}
+<div class="transcript-section" data-time="{{ segment['startTimestamp'] - call['startDate'] }}">
+    <div class="person">
+        <div class="dot"></div>
+        <span class="transcript-timestamp">{{ timeStr(segment['startTimestamp']) }}</span>
+    </div>
+    <div class="transcript-paragraph">
+        <span class="transcript-paragraph-text">{{ segment['text'] }}</span>
+    </div>
+</div>
+{% endfor %}
+{% else %}
+<p>Transcription was not generated.</p>
+{% endif %}

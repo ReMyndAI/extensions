@@ -95,7 +95,7 @@ env.globals['dateStr'] = date_str
 env.globals['timeStr'] = time_str
 env.globals['dumps'] = json.dumps
 
-async def getTranscription(call):
+async def getTranscription(call_id):
     transcription = []
     count = 1
     last_id = -1
@@ -104,7 +104,7 @@ async def getTranscription(call):
         msg = {
             "event": "sql.runSQL",
             "data": {
-                "sql": f"select * from TranscriptionSegment where callID = {call['id']} and id > {last_id} order by id",
+                "sql": f"select * from TranscriptionSegment where callID = {call_id} and id > {last_id} order by id",
                 "db": "extras"
             }
         }
@@ -141,43 +141,40 @@ async def getCallEdgeIds():
     await kvstore.set_int('max_call_id', result[0]['max(id)'])
 
 async def showWindow(html, prev=None, next=None, tag="main"):
-    if await kvstore.get(f'window:{tag}'):
-        return
+    lock = asyncio.Lock()
 
-    await kvstore.set_int(f'window:{tag}', 1)
+    async with lock:
+        view_msg = {
+            "event": "ui.renderHTML",
+            "data": {
+                "html": html,
+                "width": 420,
+                "height": 600,
+                "reopen": True,
+                "windowTag": tag,
 
-    view_msg = {
-        "event": "ui.renderHTML",
-        "data": {
-            "html": html,
-            "width": 420,
-            "height": 600,
-            "reopen": True,
-            "windowTag": tag,
-
-            "backEnabled": bool(await kvstore.get('history')),
+                "backEnabled": bool(await kvstore.get('history')),
+            }
         }
-    }
 
-    if prev is not None:
-        view_msg["data"]["prevEnabled"] = prev # True/False
-    if next is not None:
-        view_msg["data"]["nextEnabled"] = next # True/False
+        if prev is not None:
+            view_msg["data"]["prevEnabled"] = prev # True/False
+        if next is not None:
+            view_msg["data"]["nextEnabled"] = next # True/False
 
-    # with open(os.path.dirname(__file__) + '/render.html', "wt") as f:
-    #     f.write(html)
+        # with open(os.path.dirname(__file__) + '/render.html', "wt") as f:
+        #     f.write(html)
 
-    window_id = await kvstore.get_int('window_id')
-    if window_id:
-        view_msg['data']['windowID'] = window_id
+        window_id = await kvstore.get_int('window_id')
+        if window_id:
+            view_msg['data']['windowID'] = window_id
 
-    layer1.log("Sending view render request")
-    view_resp = await message_center.send_message(view_msg)
+        layer1.log("Sending view render request")
+        view_resp = await message_center.send_message(view_msg)
 
-    window_id = view_resp['windowID']
-    layer1.log("HTML rendered in window: ", window_id)
-    await kvstore.set_int('window_id', window_id)
-    await kvstore.remove(f'window:{tag}')
+        window_id = view_resp['windowID']
+        layer1.log("HTML rendered in window: ", window_id)
+        await kvstore.set_int('window_id', window_id)
 
 async def evaluateJavaScript(script):
     window_id = await kvstore.get_int('window_id')
@@ -223,7 +220,7 @@ async def showCallWindow(call, audio_url=None, offset=0, tab=None, no_push=False
         return
 
     layer1.log(f"Show window for the call {call['id']}, offset {offset}")
-    call['transcription'] = await getTranscription(call)
+    call['transcription'] = await getTranscription(call['id'])
     call['summary'] = await getCallSummary(call['id'])
 
     # workaround to remove (host), (me), etc
@@ -244,6 +241,13 @@ async def showCallWindow(call, audio_url=None, offset=0, tab=None, no_push=False
 
     if jump_to and prev_entity != entity:
         await viewPosition(call['startDate'], frame="trailing")
+
+    # if tab == "summary":
+    #     await injectSummary(call=call)
+    #     await injectTranscription(call)
+    # else:
+    #     await injectTranscription(call)
+    #     await injectSummary(call=call)
 
 async def getCall(call_id, next=False, prev=False):
     msg = {
@@ -514,19 +518,7 @@ async def createSummary(call_id):
     summary_resp = await message_center.send_message(save_msg)
     layer1.log(summary_resp)
 
-    entity = await kvstore.get('entity')
-
-    if entity == f"call:{call_id}":
-        template = env.get_template("summary.html")
-        call = await getCall(call_id)
-        # TODO: prepare summary instead of making query
-        call['summary'] = await getCallSummary(call_id)
-        html = template.render(call=call).replace('`', '\`')
-        await evaluateJavaScript(f"""
-            document.querySelector(".summary-content").innerHTML = `{html}`;
-            updateTopics();
-            onTimeUpdate(track.currentTime);
-        """)
+    if await injectSummary(call_id=call_id):
         return
 
     layer1.log("Trigger UI notification...")
@@ -542,6 +534,45 @@ async def createSummary(call_id):
     }
     response = await message_center.send_message(msg)
     layer1.log("Notification id:", response)
+
+async def injectSummary(call=None, call_id=None):
+    template = env.get_template("summary.html")
+    if call is None:
+        call = await getCall(call_id)
+    else:
+        call_id = call['id']
+    # TODO: prepare summary instead of making query
+    call['summary'] = await getCallSummary(call_id)
+    html = template.render(call=call).replace('`', '\`')
+
+    if await kvstore.get('entity') != f"call:{call_id}":
+        return False
+
+    await evaluateJavaScript(f"""
+        document.querySelector(".summary-content").innerHTML = `{html}`;
+        updateTopics();
+        onTimeUpdate(track.currentTime);
+    """)
+
+    return True
+
+async def injectTranscription(call):
+    template = env.get_template("transcription.html")
+    # call = await getCall(call_id)
+    call_id = call['id']
+    call['transcription'] = await getTranscription(call_id)
+    html = template.render(call=call).replace('`', '\`')
+
+    if await kvstore.get('entity') != f"call:{call_id}":
+        return False
+
+    await evaluateJavaScript(f"""
+        document.querySelector(".transcript-items").innerHTML = `{html}`;
+        updateTranscript();
+        onTimeUpdate(track.currentTime);
+    """)
+
+    return True
 
 async def handleNotificationCallback(msg):
     not_id = msg['notificationID']
