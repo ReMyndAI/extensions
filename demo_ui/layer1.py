@@ -3,6 +3,7 @@ import asyncio
 import json
 import uuid
 from fnmatch import fnmatch
+from datetime import datetime
 import os
 
 class MessageCenter:
@@ -120,4 +121,4 @@ class Dictionary:
 
 # Log to stdout and flush after each line
 def log(*str):
-    print(*str, flush=True)
+    print(datetime.now().strftime("%x %X.%f"), *str, flush=True)
