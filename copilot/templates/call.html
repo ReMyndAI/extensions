@@ -915,6 +915,7 @@
 
     window.onload = (event) => {
       resizeScrollView();
+      layer1.post({ loaded: "call:{{ call['id'] }}" });
     };
 
     document.onkeydown = (event) => {

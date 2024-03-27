@@ -39,7 +39,7 @@ async def register():
             "capabilities": {
                 "call": [
                     {
-                        "title": "Open Co-pilot",
+                        "title": "Call Details",
                         "event": "callCopilot",
                     },
                     {
@@ -220,8 +220,9 @@ async def showCallWindow(call, audio_url=None, offset=0, tab=None, no_push=False
         return
 
     layer1.log(f"Show window for the call {call['id']}, offset {offset}")
-    call['transcription'] = await getTranscription(call['id'])
-    call['summary'] = await getCallSummary(call['id'])
+    # NOTE: inject transcription and summary on 'loaded' js event
+    # call['transcription'] = await getTranscription(call['id'])
+    # call['summary'] = await getCallSummary(call['id'])
 
     # workaround to remove (host), (me), etc
     # people_set = set()
@@ -241,13 +242,6 @@ async def showCallWindow(call, audio_url=None, offset=0, tab=None, no_push=False
 
     if jump_to and prev_entity != entity:
         await viewPosition(call['startDate'], frame="trailing")
-
-    # if tab == "summary":
-    #     await injectSummary(call=call)
-    #     await injectTranscription(call)
-    # else:
-    #     await injectTranscription(call)
-    #     await injectSummary(call=call)
 
 async def getCall(call_id, next=False, prev=False):
     msg = {
@@ -451,6 +445,16 @@ async def handleJSCallback(msg):
         layer1.log(*msg['log'])
         return
 
+    loaded = msg.get('loaded')
+
+    if loaded:
+        if loaded == await kvstore.get('entity') and loaded.startswith("call:"):
+            call_id = int(loaded.split(":")[-1])
+            call = await getCall(call_id)
+            await injectTranscription(call)
+            await injectSummary(call=call)
+        return
+
     timestamp = msg.get('timeUpdate')
 
     if timestamp:
@@ -541,6 +545,7 @@ async def injectSummary(call=None, call_id=None):
         call = await getCall(call_id)
     else:
         call_id = call['id']
+
     # TODO: prepare summary instead of making query
     call['summary'] = await getCallSummary(call_id)
     html = template.render(call=call).replace('`', '\`')
@@ -548,10 +553,14 @@ async def injectSummary(call=None, call_id=None):
     if await kvstore.get('entity') != f"call:{call_id}":
         return False
 
+    layer1.log("Inject summary for call", call_id)
+
     await evaluateJavaScript(f"""
-        document.querySelector(".summary-content").innerHTML = `{html}`;
-        updateTopics();
-        onTimeUpdate(track.currentTime);
+        (() => {{ 
+            document.querySelector(".summary-content").innerHTML = `{html}`;
+            updateTopics();
+            onTimeUpdate(track.currentTime);
+        }})();
     """)
 
     return True
@@ -566,10 +575,14 @@ async def injectTranscription(call):
     if await kvstore.get('entity') != f"call:{call_id}":
         return False
 
+    layer1.log("Inject transcription for call", call_id)
+
     await evaluateJavaScript(f"""
-        document.querySelector(".transcript-items").innerHTML = `{html}`;
-        updateTranscript();
-        onTimeUpdate(track.currentTime);
+        (() => {{ 
+            document.querySelector(".transcript-items").innerHTML = `{html}`;
+            updateTranscript();
+            onTimeUpdate(track.currentTime);
+        }})();
     """)
 
     return True
