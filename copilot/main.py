@@ -121,6 +121,20 @@ async def getTranscription(call_id):
         
     return transcription
 
+async def checkTranscription(call_id):
+    msg = {
+        "event": "sql.runSQL",
+        "data": {
+            "sql": f"select * from TranscriptionSegment where callID = {call_id} limit 1",
+            "db": "extras"
+        }
+    }
+    layer1.log(f"Sending sql request for transcription...")
+    response = await message_center.send_message(msg)
+    result = response.get('result')
+
+    return bool(result)
+
 async def getCallEdgeIds():
     msg = {
         "event": "sql.runSQL",
@@ -496,6 +510,20 @@ async def handleJSCallback(msg):
 
 async def createSummary(call_id):
     layer1.log('Create summary for call:', call_id)
+
+    call = await getCall(call_id)
+
+    if not call.get('endDate'):
+        layer1.log("Call id not finished:", call_id)
+        return
+    
+    if call['endDate'] - call['startDate'] < 20:
+        layer1.log("Call is too short:", call_id)
+        return
+
+    if await checkTranscription(call_id) == False:
+        layer1.log("There's no transcription for call:", call_id)
+        return
 
     script_msg = {
         "event": "layerScript.run",
