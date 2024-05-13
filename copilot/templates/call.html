@@ -126,7 +126,7 @@
       Ubuntu, "Helvetica Neue", Helvetica, Arial, "PingFang SC",
       "Hiragino Sans GB", "Microsoft Yahei UI", "Microsoft Yahei",
       "Source Han Sans CN", sans-serif;
-    color: #5d5d5d;
+    color: #8d8d8d;
     font-size: 12px;
     font-weight: 350;
     line-height: 8px;
@@ -202,7 +202,7 @@
       Ubuntu, "Helvetica Neue", Helvetica, Arial, "PingFang SC",
       "Hiragino Sans GB", "Microsoft Yahei UI", "Microsoft Yahei",
       "Source Han Sans CN", sans-serif;
-    color: #5d5d5d;
+    color: #8d8d8d;
     font-size: 12px;
     font-weight: 350;
     line-height: 8px;
@@ -257,7 +257,7 @@
       Ubuntu, "Helvetica Neue", Helvetica, Arial, "PingFang SC",
       "Hiragino Sans GB", "Microsoft Yahei UI", "Microsoft Yahei",
       "Source Han Sans CN", sans-serif;
-    color: #5d5d5d;
+    color: #8d8d8d;
     font-size: 12px;
     font-weight: 350;
     line-height: 8px;
@@ -303,7 +303,7 @@
       Ubuntu, "Helvetica Neue", Helvetica, Arial, "PingFang SC",
       "Hiragino Sans GB", "Microsoft Yahei UI", "Microsoft Yahei",
       "Source Han Sans CN", sans-serif;
-    color: #5d5d5d;
+    color: #8d8d8d;
     font-size: 12px;
     font-weight: 350;
     line-height: 8px;
@@ -474,7 +474,7 @@
       Ubuntu, "Helvetica Neue", Helvetica, Arial, "PingFang SC",
       "Hiragino Sans GB", "Microsoft Yahei UI", "Microsoft Yahei",
       "Source Han Sans CN", sans-serif;
-    color: #717171;
+    color: #919191;
     font-size: 12px;
     font-weight: 350;
     line-height: 8px;
@@ -541,7 +541,7 @@
       Ubuntu, "Helvetica Neue", Helvetica, Arial, "PingFang SC",
       "Hiragino Sans GB", "Microsoft Yahei UI", "Microsoft Yahei",
       "Source Han Sans CN", sans-serif;
-    color: #5d5d5d;
+    color: #8d8d8d;
     font-size: 12px;
     font-weight: 350;
     line-height: 22.5px;
@@ -575,7 +575,7 @@
       Ubuntu, "Helvetica Neue", Helvetica, Arial, "PingFang SC",
       "Hiragino Sans GB", "Microsoft Yahei UI", "Microsoft Yahei",
       "Source Han Sans CN", sans-serif;
-    color: #5d5d5d;
+    color: #8d8d8d;
     font-size: 15px;
     font-weight: 350;
     line-height: 22.5px;
@@ -623,7 +623,7 @@
     margin-top: 0.5em;
     margin-bottom: 1em;
     padding-left: 8px;
-    color: #5d5d5d;
+    color: #8d8d8d;
   }  
   .topic-active > .topic-text {
     color: #b2b2b2;
@@ -701,10 +701,12 @@
       <div class="divider"></div>
       <div class="scroll-content">
           <div class="transcript-items">
-              {% include "transcription.html" %}
+              {# include "transcription.html" #}
+              <p>Loading transcription…</p>
           </div>
           <div class="summary-content">
-              {% include "summary.html" %}
+              {# include "summary.html" #}
+              <p>Loading summary…</p>
           </div>
       </div>
     </div>
