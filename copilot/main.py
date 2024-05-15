@@ -4,7 +4,7 @@ import json
 import time
 import os
 import sys
-from datetime import datetime
+from datetime import datetime, timezone
 from base64 import b64encode
 
 from jinja2 import Environment, PackageLoader, select_autoescape
@@ -310,8 +310,8 @@ async def getCallSummary(call_id):
         summary = json.loads(summary)
 
         for t in summary:
-            t['start'] = datetime.fromisoformat(t['start']).timestamp()
-            t['end'] = datetime.fromisoformat(t['end']).timestamp()
+            t['start'] = datetime.fromisoformat(t['start']).replace(tzinfo=timezone.utc).timestamp()
+            t['end'] = datetime.fromisoformat(t['end']).replace(tzinfo=timezone.utc).timestamp()
     except:
         # fallback to string summary
         pass
