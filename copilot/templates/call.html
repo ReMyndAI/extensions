@@ -884,6 +884,17 @@
                 track.currentTime = Math.min(parseFloat(t.parentNode.getAttribute("data-time")), track.duration);
             };
         }
+
+        const summaryButton = document.getElementById("summary-button");
+
+        if (summaryButton) {
+            summaryButton.onclick = (event) => {
+                layer1.post({ summary: {{ call['id'] }} });
+                event.target.textContent = "Generating summary…";
+                event.target.classList.add("clicked");
+                event.target.onclick = null;
+            };
+        }
     }
 
     updateTopics();
@@ -984,16 +995,6 @@
         event.target.textContent = callTitle;
     };
 
-    const summaryButton = document.getElementById("summary-button");
-
-    if (summaryButton) {
-        summaryButton.onclick = (event) => {
-            layer1.post({ summary: {{ call['id'] }} });
-            event.target.textContent = "Generating summary…";
-            event.target.classList.add("clicked");
-            event.target.onclick = null;
-        };
-    }
 {% endblock %}
 
 </html>

@@ -1,7 +1,7 @@
 {
     "name": "Call Details",
     "description": "Shows extra information about calls and their participants",
-    "version": "1.0.30",
+    "version": "1.0.31",
     "minLayer1Version": "1.2.8320",
     "id": "2ECBD7B9-1DEE-4E48-9381-AC9E9AA8B4FA"
 }
