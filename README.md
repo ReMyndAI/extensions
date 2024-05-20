@@ -565,6 +565,8 @@ Response:
         "height": 600,
         // Optional – reopen window if specified windowID not found
         "reopen": true,
+        // Optional – place window on top of other app windows (could be overriden by user)
+        "alwaysOnTop": false,
         // Optional - window tag (string)
         "windowTag": "main",
         // Optional - display a 'back' button in the window toolbar and set its enabled state.
