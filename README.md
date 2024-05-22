@@ -145,6 +145,25 @@ Below is a list of channels used to broadcast app-wide events. An extension may 
 ```
 </details>
 
+* `didCaptureOCR` Layer1 recorder captured a new OCR data from the focused window
+<details>
+<summary><b>Example</b> (click to expand)</summary>
+
+```JavaScript
+{
+    // DB entry id
+    'id': 24625,
+    // Optional window title
+    'title': 'EURUSD=X',
+    // Optional URL
+    'url': null,
+    'timestamp': 1716396740.67,
+    'appName': 'Stocks',
+    'text': 'EURUSD=X\nEURUSD=X 1,084 -0,14 %\n+\nQ Search\nBusiness News\nFrom Yahoo Finance\nMy Symbols *\nEURUSD=X\nEUR/USD\nGBPUSD=X\nGBP/USD|\nUSDRUB=X\nUSD/RUB\nEURRUB=X\nEUR/RUB\nTON11419-USD\nToncoin USD\nBTC-USD\nBitcoin USD\nETH-USD\nEthereum USD\nILS=X\nUSD/ILS\nyahoo! finance\nEURUSD=X\nCCY • USD\n1D\n1W\n1M\nEUR/USD\n3М\n6M\nYTD\n1Y\n2Y\n5Y\n1,084\n-0,14 %\n1,274\n+0,23%\n90,13\n-0,11 %\n97,85\n-0,11 %\n6,38\n-0,26 %\n70 359,66\n+0,54%\n3757,15\n-1,60 %\n3,669\n+0,13 %\nUpdated on 22.05.2024, 17:36\n1,084\n+1,82 %\nPast Month\n10Y\nALL\n1,090\n1,084\n1,077\n1,071\n-\n-\n22\n29\n6\nOpen\nHigh\nLow\n1,086\n1,087\n1,082\nVol\nP/E\nMkt Cap\n0\n-\n-\nSee More Data from Yahoo Finance >\nInvesting.com\nDollar steady ahead of Fed minutes, sterling\ngains on CPI release\nThe U.S. dollar traded calmly Wednesday ahead of the...\n11h ago\nInvesting.com\nDollar steadies ahead of FOMC minutes, a\ndeluge of Fed speakers\n13\n20\n52W H\n52W L\nAvg Vol\n1,128\n1,045\nYield\nBeta\nEPS\nInvesting.com\nDollar steady; Fed speakers could provide\nimpetus\nThe U.S. dollar traded in a tight range Tuesday, steadyi...\n1d ago\nInvesting.com\nDollar steadies, but on track for sharp weekly\nloss'
+}
+```
+</details>
+
 ### `calls` channel
 
 * `callDidStart` Layer1 detected a new call (Zoom, etc.)
@@ -329,6 +348,20 @@ In order to send a message to the `messages` channel use the `message_center.sen
     "windowID": 1234,
     // Optional
     "windowTag": "main"
+}
+```
+</details>
+
+* `aiResponseStream` Response stream updates from an AI query
+<details>
+<summary><b>Example</b> (click to expand)</summary>
+
+```JSON
+{
+    "text": "Monitoring real-time currency\nexchange data and financial news\nupdates, particularly focusing on",
+    // Optional (for streaming mode)
+    "streamId": "0A7C792B-F121-4C47-B20A-BA06251B7A7B",
+    "tokens": 42
 }
 ```
 </details>
@@ -744,6 +777,40 @@ Response:
 Response:
 ```JSON
 "OK"
+```
+</details>
+
+### `ai` functions
+
+* `ai.query` Run AI query on the main Layer1 backend.
+
+<details>
+<summary><b>Example</b> (click to expand)</summary>
+
+```JavaScript
+{
+    "event": "ai.query",
+    "data": {
+        // Optional
+        "instructions": "Some OCR data from one or more user opened windows will be provided, including application names, optional window titles and optional visited URLs for browser windows. Identify the context on what the user is currently working on and generate a short summary in one impersonal sentence without subject. The result should be a formatted string with line breaks inserted so that there's no more than 35 letters in each line.",
+        "text": "EURUSD=X\nEURUSD=X 1,084 -0,14 %\n+\nQ Search\nBusiness News\nFrom Yahoo Finance\nMy Symbols *\nEURUSD=X\nEUR/USD\nGBPUSD=X\nGBP/USD|\nUSDRUB=X\nUSD/RUB\nEURRUB=X\nEUR/RUB\nTON11419-USD\nToncoin USD\nBTC-USD\nBitcoin USD\nETH-USD\nEthereum USD\nILS=X\nUSD/ILS\nyahoo! finance\nEURUSD=X\nCCY • USD\n1D\n1W\n1M\nEUR/USD\n3М\n6M\nYTD\n1Y\n2Y\n5Y\n1,084\n-0,14 %\n1,274\n+0,23%\n90,13\n-0,11 %\n97,85\n-0,11 %\n6,38\n-0,26 %\n70 359,66\n+0,54%\n3757,15\n-1,60 %\n3,669\n+0,13 %\nUpdated on 22.05.2024, 17:36\n1,084\n+1,82 %\nPast Month\n10Y\nALL\n1,090\n1,084\n1,077\n1,071\n-\n-\n22\n29\n6\nOpen\nHigh\nLow\n1,086\n1,087\n1,082\nVol\nP/E\nMkt Cap\n0\n-\n-\nSee More Data from Yahoo Finance >\nInvesting.com\nDollar steady ahead of Fed minutes, sterling\ngains on CPI release\nThe U.S. dollar traded calmly Wednesday ahead of the...\n11h ago\nInvesting.com\nDollar steadies ahead of FOMC minutes, a\ndeluge of Fed speakers\n13\n20\n52W H\n52W L\nAvg Vol\n1,128\n1,045\nYield\nBeta\nEPS\nInvesting.com\nDollar steady; Fed speakers could provide\nimpetus\nThe U.S. dollar traded in a tight range Tuesday, steadyi...\n1d ago\nInvesting.com\nDollar steadies, but on track for sharp weekly\nloss",
+        // Optional, default false
+        "stream": true,
+        // Optional, default app-defined
+        "model": "gpt-4o",
+        // Optional text/json, default 'text'
+        "format": "text"
+    }
+}
+```
+Response:
+```JavaScript
+{
+    "text": "Monitoring real-time currency\nexchange data and financial news\nupdates, particularly focusing on\nEUR/USD performance",
+    // Optional (for streaming mode)
+    "streamId": "0A7C792B-F121-4C47-B20A-BA06251B7A7B",
+    "tokens": 42
+}
 ```
 </details>
 
