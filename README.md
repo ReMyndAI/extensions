@@ -54,7 +54,7 @@ The output of the final step in your workflow, if any, will be returned as the f
 ## Python
 To add your own Python code and enable background execution, click "Add Python Script" at the top of the window. This adds a `main.py` file to your extension directory, along with the required `layer1.py` library.
 
-**Important::** Your main Python script must be named `main.py`, and it must execute `message_center.run()` at the end to run in persistently in the background. This is implemented for you in the generated script:
+**Important:** Your main Python script must be named `main.py`, and it must execute `message_center.run()` at the end to run in persistently in the background. This is implemented for you in the generated script:
 
 ```python
 import layer1
@@ -1229,25 +1229,25 @@ Response:
 ```
 </details>
 
-### `layerScript` functions
+### `workflow` functions
 
-* `layerScript.run` Set custom title of a call entity.
+* `workflow.run` Runs a workflow with the provided ID, and customizable input.
 <details>
 <summary><b>Example</b> (click to expand)</summary>
 
 ```JavaScript
 {
-    "event": "layerScript.run",
+    "event": "workflow.run",
     "data": {
-        "scriptID": "0FFC00D4-4535-405F-9C6F-B10936E595EE",
-        "scriptInput": "1701279838"
+        "id": "0FFC00D4-4535-405F-9C6F-B10936E595EE",
+        "input": "WORKFLOW INPUT HERE"
     }
 }
 ```
 Response:
 ```JSON
 {
-    "summary": "'[\n    {\n        \"start\": \"2023-10-02 16:32:01.713\",\n        \"end\": \"2023-10-02 16:34:11.651\",\n        \"title\": \"User Engagement and Feedback on New Release\",\n        \"summary\": \"The team discusses the user engagement metrics following the new version release, noting an increase in downloads and app usage. They observe that users are opening the app multiple times, indicating active use. The early feedback is considered significant, showing that the update has improved functionality.\"\n    },\n    {\n        \"start\": \"2023-10-02 16:34:20.714\",\n        \"end\": \"2023-10-02 16:37:28.994\",\n        \"title\": \"Technical Issues and Fixes\",\n        \"summary\": \"The team identifies a problem with the Auto Start feature not working as intended. They discuss the need to update the API to a newer version to ensure the app appears in the correct section of system settings for auto-starting. A fix has been submitted, and a new build is awaited to confirm the resolution. Action items include checking the preference settings for auto start and considering an explicit setting for this feature.\"\n    },\n    {\n        \"start\": \"2023-10-02 16:38:34.907\",\n        \"end\": \"2023-10-02 16:43:49.118\",\n        \"title\": \"Feature Enhancements and User Interaction\",\n        \"summary\": \"The team discusses potential enhancements, including tracking the usage of a floating button and adding a pop-up notification for paused activities. They consider drawing attention to the floating button to increase its use. Additionally, there\'s mention of updating the onboarding process with a placeholder for search results. Action items include tracking the floating button\'s usage and implementing the discussed enhancements.\"\n    }\n]'"
+    "output": "This is the workflow's result. It may contain AI-generated text, JSON objects, or anything else your workflow is configured to return."
 }
 ```
 </details>
@@ -1277,6 +1277,6 @@ Response:
 
  - Tips & Tricks
    - JS log
-   - Setting up a LayerScript
+   - Setting up a Workflow
    - Embedding HTML images
    - Call audio URLs

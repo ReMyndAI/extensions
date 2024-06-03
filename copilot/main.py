@@ -526,14 +526,14 @@ async def createSummary(call_id):
         return
 
     script_msg = {
-        "event": "layerScript.run",
+        "event": "workflow.run",
         "data": {
-            "scriptID": "0FFC00D4-4535-405F-9C6F-B10936E595EE",
-            "scriptInput": str(call_id)
+            "id": "0FFC00D4-4535-405F-9C6F-B10936E595EE",
+            "input": str(call_id)
         }
     }
     response = await message_center.send_message(script_msg)
-    summary = response['summary']
+    summary = response['output']
 
     layer1.log("Saving summary to EdgeDB")
 
