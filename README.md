@@ -202,6 +202,33 @@ Below is a list of channels used to broadcast app-wide events. An extension may 
 ```
 </details>
 
+* `focusedWindowChanged` The currently-focused window did change.
+<details>
+<summary><b>Example</b> (click to expand)</summary>
+
+```JSON
+{
+    "appName": "Mail",
+    "id": "2583",
+    "pid": 745,
+    "timestamp": 724704877.431679,
+    "title": "Inbox"
+}
+```
+</details>
+
+* `leftMouseUp` The user did click the left mouse button.
+<details>
+<summary><b>Example</b> (click to expand)</summary>
+
+```JSON
+{
+    "locationInWindow": [0.25, 0.4],
+    "timestamp": 724704877.431679
+}
+```
+</details>
+
 ### `recorder` channel
 
 * `didCaptureFrame` Layer1 recorder captured a new frame
@@ -214,7 +241,8 @@ Below is a list of channels used to broadcast app-wide events. An extension may 
     "position": 1021807592431, 
     // Floating value timestamp
     // timestamp = position / 600
-    "timestamp": 1703012654.0516667
+    "timestamp": 1703012654.0516667,
+    "cursorPosition": [0.25, 0.4]
 }
 ```
 </details>
