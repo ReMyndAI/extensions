@@ -27,6 +27,12 @@ def get_timestamp():
 def date_str(ts):
     return datetime.fromtimestamp(ts).strftime("%x")
 
+def date_str_hr(ts):
+    dstr = datetime.fromtimestamp(ts).strftime("%x")
+    if datetime.fromtimestamp(get_timestamp()).strftime("%x") == dstr:
+        return "Today"
+    return dstr
+
 def time_str(ts):
     return datetime.fromtimestamp(ts).strftime("%X")
 
@@ -39,6 +45,34 @@ env.globals['getTimestamp'] = get_timestamp
 env.globals['dateStr'] = date_str
 env.globals['timeStr'] = time_str
 env.globals['dumps'] = json.dumps
+
+async def register():
+    layer1.log("Extension ID:", message_center.extension_id)
+
+    reg_msg = {
+        "event": "extension.register",
+        "data": {
+            "capabilities": {
+                "standalone": [
+                    {
+                        "title": "Activity Log",
+                        "event": "launch",
+                    },
+                    {
+                        "title": "Perform OCR",
+                        "event": "performOCR",
+                    }
+                ],
+            }
+        }
+    }
+
+    reg_resp = await message_center.send_message(reg_msg)
+    layer1.log("Registration:", json.dumps(reg_resp, indent=4))
+
+    await kvstore.remove('window_id')
+    await kvstore.remove('ocr_list')
+    await kvstore.remove('state')
 
 async def showWindow(html, prev=None, next=None, tag="main"):
     lock = asyncio.Lock()
@@ -73,28 +107,37 @@ async def showWindow(html, prev=None, next=None, tag="main"):
         window_id = view_resp['windowID']
         layer1.log("HTML rendered in window: ", window_id)
         await kvstore.set_int('window_id', window_id)
+        await kvstore.remove("hidden")
 
-# async def immersing_task(rpm):
-#     # await kvstore.remove("state")
-#     # await kvstore.remove("frame_count")
-#     await kvstore.get_int('last_timestamp')
+async def renderActivity():
+    activity = await kvstore.get_json("activity") or []
 
-#     while True:
-#         await asyncio.sleep(5)
+    dates = []
 
-#         last_frame_ts = await kvstore.get_int('last_frame_ts')
+    for a in activity:
+        date = date_str_hr(a['timestamp'])
+        a['date'] = date
+        if not dates or dates[-1] != date:
+             dates.append(date)
 
-#         if not last_frame_ts: continue
+    image_data = None
+    day_spent = 0.0
+    if activity:
+        bundle_id = activity[-1].get("bundle_id")
+        if bundle_id:
+            image_data = await kvstore.get(f"bundle:{bundle_id}")
 
-#         if get_timestamp() - last_frame_ts > minutes * 60:
-#             msg = {
-#                 "event": "ui.showNotification",
-#                 "data": {
-#                     "text": "Recording paused\nclick here to resume."
-#                 }
-#             }
-#             response = await message_center.send_message(msg)
-#             print("Notification id: ", response)
+        for a in activity:
+            if a['date'] == activity[-1]['date']:
+                try:
+                    day_spent += float(a['cost'])
+                except:
+                    pass
+
+    image_data = image_data or encode_image("assets/images/5a3187eb-90c8-4a0e-bf98-bb293ba809a6.png")
+    template = env.get_template("activity.html")
+    html = template.render(activity=activity, dates=dates, icon=image_data, cost=f"{day_spent:.03f}")
+    await showWindow(html)
 
 async def ai_prompt_task():
     if await kvstore.get("state"):
@@ -114,8 +157,8 @@ async def ai_prompt_task():
     text = ""
 
     for ocr in ocr_list:
-        if ocr.get("appName"):
-            text += f"Application: {ocr['appName']}\n"
+        if ocr.get("app_name"):
+            text += f"Application: {ocr['app_name']}\n"
         if ocr.get("title"):
             text += f"Title: {ocr['title']}\n"
         if ocr.get("url"):
@@ -150,18 +193,56 @@ async def ai_prompt_task():
 
         activity = await kvstore.get_json("activity") or []
         activity.append({
-            'appName': ocr_list[-1].get('appName'),
+            'app_name': ocr_list[-1].get('app_name'),
+            'bundle_id': ocr_list[-1].get('bundle_id'),
             'timestamp': ocr_list[-1].get('timestamp'),
-            'summary': response['text']
+            'summary': response['text'],
+            'cost': f"{response.get('cost', 0):.03f}"
         })
 
-        template = env.get_template("activity.html")
-        html = template.render(activity=activity)
-
-        await showWindow(html)
         await kvstore.set_json("activity", activity)
 
+        if not await kvstore.get("hidden"):
+            await renderActivity()
+
     await kvstore.remove("state")
+
+async def performOCR(position):
+    layer1.log("OCR triggered:", position / 600)
+
+    msg = {
+        "event": "recorder.getFrameOCR",
+        "data": {
+            "position": position
+        }
+    }
+    response = await message_center.send_message(msg)
+
+    if not response.get('text'):
+        layer1.log("Got empty OCR result")
+        return
+    
+    layer1.log("Got OCR result, trigger AI task...")
+
+    ocr_list = await kvstore.get_json('ocr_list') or []
+    ocr_list.append({
+        'id': int(response.get('timestamp')),
+        'timestamp': response.get('timestamp'),
+        'app_name': response.get('appName'),
+        'bundle_id': response.get('bundleId'),
+        'text': response['text'],
+        'title': response.get('title'),
+        'url': response.get('url')
+    })
+
+    bundle_id = response.get('bundleId')
+    app_icon = response.get('appIcon')
+
+    if bundle_id and app_icon:
+        await kvstore.set(f"bundle:{bundle_id}", app_icon)
+
+    await kvstore.set_json('ocr_list', ocr_list)
+    await ai_prompt_task()
 
 # async def handleNotificationCallback(msg):
 #     not_id = msg['notificationID']
@@ -208,13 +289,38 @@ async def handleDidCaptureOCR(msg):
 #     if event == 'notificationCallback':
 #         await handleNotificationCallback(msg)
 
+# Handler for incoming events on the 'message' channel
+async def msg_handler(channel, event, msg):
+    # print(f"{event}:\n", json.dumps(msg, indent=4))
+
+    if event == 'launch':
+        await renderActivity()
+        return
+
+    if event == 'performOCR':
+        last_timestamp = await kvstore.get_json("last_timestamp")
+        if not last_timestamp:
+            return
+        await performOCR(int(last_timestamp['position']))
+        return
+    
+    if event == 'windowWillClose':
+        await kvstore.remove('window_id')
+        await kvstore.set("hidden", 1)
+        return
+
 # Handler for incoming events on the 'recorder' channel
 async def recorder_handler(channel, event, msg):
+    if event == 'didCaptureFrame':
+        await kvstore.set_json("last_timestamp", msg)
+        return
+
     if event == 'didCaptureOCR':
         await handleDidCaptureOCR(msg)
 
-# loop.create_task(immersing_task(1))
+loop.create_task(register())
 # message_center.subscribe('ui', ui_handler)
+message_center.subscribe('messages', msg_handler)
 message_center.subscribe('recorder', recorder_handler)
 layer1.log("Waiting for extension triggers...")
 message_center.run() # Will run forever
