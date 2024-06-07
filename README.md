@@ -249,7 +249,7 @@ Below is a list of channels used to broadcast app-wide events. An extension may 
 ```
 </details>
 
-* `didCaptureOCR` Layer1 recorder captured a new OCR data from the focused window
+* `didCaptureOCR` Layer1 recorder captured new OCR data from the focused window
 <details>
 <summary><b>Example</b> (click to expand)</summary>
 
@@ -261,8 +261,12 @@ Below is a list of channels used to broadcast app-wide events. An extension may 
     'title': 'EURUSD=X',
     // Optional URL
     'url': null,
-    'timestamp': 1716396740.67,
+    // Optional Base64 encoded icon
+    'appIcon': '<base64-encoded-png-image-data>',
+    'timestamp': 1717688799.6166666,
+    'position': 1030613279770,
     'appName': 'Stocks',
+    'bundleID': 'com.apple.stocks',
     'text': 'EURUSD=X\nEURUSD=X 1,084 -0,14 %\n+\nQ Search\nBusiness News\nFrom Yahoo Finance\nMy Symbols *\nEURUSD=X\nEUR/USD\nGBPUSD=X\nGBP/USD|\nUSDRUB=X\nUSD/RUB\nEURRUB=X\nEUR/RUB\nTON11419-USD\nToncoin USD\nBTC-USD\nBitcoin USD\nETH-USD\nEthereum USD\nILS=X\nUSD/ILS\nyahoo! finance\nEURUSD=X\nCCY • USD\n1D\n1W\n1M\nEUR/USD\n3М\n6M\nYTD\n1Y\n2Y\n5Y\n1,084\n-0,14 %\n1,274\n+0,23%\n90,13\n-0,11 %\n97,85\n-0,11 %\n6,38\n-0,26 %\n70 359,66\n+0,54%\n3757,15\n-1,60 %\n3,669\n+0,13 %\nUpdated on 22.05.2024, 17:36\n1,084\n+1,82 %\nPast Month\n10Y\nALL\n1,090\n1,084\n1,077\n1,071\n-\n-\n22\n29\n6\nOpen\nHigh\nLow\n1,086\n1,087\n1,082\nVol\nP/E\nMkt Cap\n0\n-\n-\nSee More Data from Yahoo Finance >\nInvesting.com\nDollar steady ahead of Fed minutes, sterling\ngains on CPI release\nThe U.S. dollar traded calmly Wednesday ahead of the...\n11h ago\nInvesting.com\nDollar steadies ahead of FOMC minutes, a\ndeluge of Fed speakers\n13\n20\n52W H\n52W L\nAvg Vol\n1,128\n1,045\nYield\nBeta\nEPS\nInvesting.com\nDollar steady; Fed speakers could provide\nimpetus\nThe U.S. dollar traded in a tight range Tuesday, steadyi...\n1d ago\nInvesting.com\nDollar steadies, but on track for sharp weekly\nloss'
 }
 ```
@@ -639,6 +643,44 @@ Response:
 ```
 </details>
 
+* `recorder.getFrameOCR` Get OCR data for a specified frame.
+<details>
+<summary><b>Example</b> (click to expand)</summary>
+
+```JavaScript
+{
+    "event": "recorder.getFrameOCR",
+    "data": {
+        // Either position or timestamp must be specified
+        // timestamp = position / 600
+
+        // Optional
+        // more precise Integer position of a frame
+        "position": 1021493241857,
+        // Optional
+        // less precise floating point timestamp of a frame
+        "timestamp": 1702488736.4283333
+    }
+}
+```
+Response:
+```JavaScript
+{
+    // Optional window title
+    'title': 'EURUSD=X',
+    // Optional URL
+    'url': null,
+    // Optional Base64 encoded icon
+    'appIcon': '<base64-encoded-png-image-data>',
+    'timestamp': 1717688799.6166666,
+    'position': 1030613279770,
+    'appName': 'Stocks',
+    'bundleID': 'com.apple.stocks',
+    'text': 'EURUSD=X\nEURUSD=X 1,084 -0,14 %\n+\nQ Search\nBusiness News\nFrom Yahoo Finance\nMy Symbols *\nEURUSD=X\nEUR/USD\nGBPUSD=X\nGBP/USD|\nUSDRUB=X\nUSD/RUB\nEURRUB=X\nEUR/RUB\nTON11419-USD\nToncoin USD\nBTC-USD\nBitcoin USD\nETH-USD\nEthereum USD\nILS=X\nUSD/ILS\nyahoo! finance\nEURUSD=X\nCCY • USD\n1D\n1W\n1M\nEUR/USD\n3М\n6M\nYTD\n1Y\n2Y\n5Y\n1,084\n-0,14 %\n1,274\n+0,23%\n90,13\n-0,11 %\n97,85\n-0,11 %\n6,38\n-0,26 %\n70 359,66\n+0,54%\n3757,15\n-1,60 %\n3,669\n+0,13 %\nUpdated on 22.05.2024, 17:36\n1,084\n+1,82 %\nPast Month\n10Y\nALL\n1,090\n1,084\n1,077\n1,071\n-\n-\n22\n29\n6\nOpen\nHigh\nLow\n1,086\n1,087\n1,082\nVol\nP/E\nMkt Cap\n0\n-\n-\nSee More Data from Yahoo Finance >\nInvesting.com\nDollar steady ahead of Fed minutes, sterling\ngains on CPI release\nThe U.S. dollar traded calmly Wednesday ahead of the...\n11h ago\nInvesting.com\nDollar steadies ahead of FOMC minutes, a\ndeluge of Fed speakers\n13\n20\n52W H\n52W L\nAvg Vol\n1,128\n1,045\nYield\nBeta\nEPS\nInvesting.com\nDollar steady; Fed speakers could provide\nimpetus\nThe U.S. dollar traded in a tight range Tuesday, steadyi...\n1d ago\nInvesting.com\nDollar steadies, but on track for sharp weekly\nloss'
+}
+```
+</details>
+
 * `recorder.startCallRecording` Start an audio recording of a specified app.
 
 <details>
@@ -913,7 +955,8 @@ Response:
     "text": "Monitoring real-time currency\nexchange data and financial news\nupdates, particularly focusing on\nEUR/USD performance",
     // Optional (for streaming mode)
     "streamId": "0A7C792B-F121-4C47-B20A-BA06251B7A7B",
-    "tokens": 42
+    "tokens": 42,
+    "cost": 0.00234
 }
 ```
 </details>
