@@ -244,7 +244,11 @@ Below is a list of channels used to broadcast app-wide events. An extension may 
     // Floating value timestamp
     // timestamp = position / 600
     "timestamp": 1703012654.0516667,
-    "cursorPosition": [0.25, 0.4]
+    "cursorPosition": [0.25, 0.4],
+    // Optional focused window information
+    "appName": "Stocks",
+    "bundleID": "com.apple.stocks",
+    "title": "BTC-USD"
 }
 ```
 </details>
