@@ -231,6 +231,28 @@ Below is a list of channels used to broadcast app-wide events. An extension may 
 ```
 </details>
 
+* `keyUp` The user did press and release a keyboard button.
+<details>
+<summary><b>Example</b> (click to expand)</summary>
+
+```JSON
+{
+    "timestamp": 724704877.431679
+}
+```
+</details>
+
+* `scrollWheel` The user did scroll.
+<details>
+<summary><b>Example</b> (click to expand)</summary>
+
+```JSON
+{
+    "timestamp": 724704877.431679
+}
+```
+</details>
+
 ### `recorder` channel
 
 * `didCaptureFrame` Layer1 recorder captured a new frame
