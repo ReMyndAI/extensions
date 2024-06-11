@@ -71,13 +71,12 @@ async def register():
     layer1.log("Registration:", json.dumps(reg_resp, indent=4))
 
     await kvstore.remove('window_id')
-    await kvstore.remove('ocr_list')
-    await kvstore.remove('state')
+    # await kvstore.remove('ocr_list')
+
+ui_lock = asyncio.Lock()
 
 async def showWindow(html, prev=None, next=None, tag="main"):
-    lock = asyncio.Lock()
-
-    async with lock:
+    async with ui_lock:
         view_msg = {
             "event": "ui.renderHTML",
             "data": {
@@ -139,21 +138,11 @@ async def renderActivity():
     html = template.render(activity=activity, dates=dates, icon=image_data, cost=f"{day_spent:.03f}")
     await showWindow(html)
 
-async def ai_prompt_task():
-    if await kvstore.get("state"):
-        layer1.log('AI is working, enqueue this OCR message')
-        return
-
-    await kvstore.set("state", "running")
-
-    ocr_list = await kvstore.get_json("ocr_list")
-
+async def ai_prompt_task(ocr_list):
     if not ocr_list:
-        layer1.log('OCR data is empty, skipping')
+        layer1.log('Empty OCR data in AI prompt task!')
         return
-    
-    await kvstore.remove("ocr_list")
-    
+
     text = ""
 
     for ocr in ocr_list:
@@ -205,89 +194,130 @@ async def ai_prompt_task():
         if not await kvstore.get("hidden"):
             await renderActivity()
 
-    await kvstore.remove("state")
+async def performOCR_task():
+    intervals = await kvstore.get_json("activity_intervals")
 
-async def performOCR(position):
-    layer1.log("OCR triggered:", position / 600)
+    if not intervals: return
 
+    while intervals:
+        interval = intervals[0]
+
+        if get_timestamp() - interval[1] < 30:
+            return
+        
+        await performOCR(interval)
+        
+        del intervals[0]
+        await kvstore.set_json("activity_intervals", intervals)
+
+ocr_lock = asyncio.Lock()
+
+async def performOCR(interval):
+    layer1.log("OCR triggered:", interval[0], interval[1])
+
+    d = interval[1] - interval[0]
+    n = int(d / 15) + 1
+
+    if n > 5:
+        n = 5
+
+    ocr_list = []
+
+    async with ocr_lock:
+        for i in range(n):
+            timestamp = interval[0] + ((interval[1] - interval[0]) / n) * (i + 0.5)
+
+            msg = {
+                "event": "recorder.getFrameOCR",
+                "data": {
+                    "timestamp": timestamp
+                }
+            }
+            response = await message_center.send_message(msg)
+
+            if not response.get('text'):
+                layer1.log("Got empty OCR result:", response)
+                continue
+
+            if abs(response['timestamp'] - timestamp) > 10:
+                layer1.log("Got irrelevent OCR result:", response)
+                continue
+            
+            ocr_list.append({
+                'id': int(response.get('timestamp')),
+                'timestamp': response.get('timestamp'),
+                'app_name': response.get('appName'),
+                'bundle_id': response.get('bundleID'),
+                'text': response['text'],
+                'title': response.get('title'),
+                'url': response.get('url')
+            })
+
+            bundle_id = response.get('bundleID')
+            app_icon = response.get('appIcon')
+
+            if bundle_id and app_icon:
+                await kvstore.set(f"bundle:{bundle_id}", app_icon)
+
+        if not ocr_list:
+            layer1.log("No OCR results, skip activity interval")
+            return
+
+        layer1.log("Got OCR results, trigger AI task...")
+        await ai_prompt_task(ocr_list)
+
+async def showNotification(text):
+    layer1.log("Trigger UI notification...")
     msg = {
-        "event": "recorder.getFrameOCR",
+        "event": "ui.showNotification",
         "data": {
-            "position": position
+            "text": text,
+            # "action": {
+            #     # "title": "See summary »",
+            #     "data": f"summary:{call_id}"
+            # }
         }
     }
     response = await message_center.send_message(msg)
+    layer1.log("Notification id:", response)
+    return response.get('notificationID')
 
-    if not response.get('text'):
-        layer1.log("Got empty OCR result")
+# async def handleDidCaptureOCR(msg):
+#     layer1.log('OCR captured:', msg['timestamp'], msg['appName'])
+
+#     ocr_list = await kvstore.get_json('ocr_list') or []
+#     ocr_list.append(msg)
+
+#     await kvstore.set_json('ocr_list', ocr_list)
+#     last_ocr = await kvstore.get_int('last_ocr')
+#     if not last_ocr or int(msg['timestamp']) > last_ocr:
+#         await kvstore.set_int('last_ocr', int(msg['timestamp']))
+#     await ai_prompt_task()
+
+activity_lock = asyncio.Lock()
+
+async def handleUserActivity(timestamp):
+    last_frame = await kvstore.get_json("last_frame")
+
+    # check recording is active
+    if not last_frame or timestamp - last_frame['timestamp'] > 15:
         return
-    
-    layer1.log("Got OCR result, trigger AI task...")
 
-    ocr_list = await kvstore.get_json('ocr_list') or []
-    ocr_list.append({
-        'id': int(response.get('timestamp')),
-        'timestamp': response.get('timestamp'),
-        'app_name': response.get('appName'),
-        'bundle_id': response.get('bundleId'),
-        'text': response['text'],
-        'title': response.get('title'),
-        'url': response.get('url')
-    })
+    async with activity_lock:
+        intervals = await kvstore.get_json("activity_intervals")
 
-    bundle_id = response.get('bundleId')
-    app_icon = response.get('appIcon')
+        if not intervals:
+            intervals = [(timestamp, timestamp)]
+        else:
+            last_interval = intervals[-1]
 
-    if bundle_id and app_icon:
-        await kvstore.set(f"bundle:{bundle_id}", app_icon)
+            if last_interval[1] - last_interval[0] > 90 or timestamp - last_interval[0] > 100 or timestamp - last_interval[1] > 20:
+                intervals.append((timestamp, timestamp))
+            else:
+                intervals[-1] = (last_interval[0], timestamp)
 
-    await kvstore.set_json('ocr_list', ocr_list)
-    await ai_prompt_task()
-
-# async def handleNotificationCallback(msg):
-#     not_id = msg['notificationID']
-#     layer1.log('Notification callback: ', not_id)
-#     timestamps = msg['action'].get('data')
-#     if timestamps is None:
-#         return
-
-#     json_obj = json.loads(timestamps)
-#     date_strings = map(lambda d: datetime.datetime.fromtimestamp(d).strftime("%d/%m/%Y, %H:%M:%S"), json_obj)
-#     participants = "</li><li>".join(date_strings)
-#     html = f"""
-#     <html><body>
-#     <h2>Captured Frames</h2>
-#     <ul>
-#     <li>{participants}</li>
-#     </ul>
-#     </body></html>
-#     """
-#     view_msg = {
-#         "event": "ui.renderHTML",
-#         "data": {
-#             "html": html,
-#             "width": 400,
-#             "height": 600
-#         }
-#     }
-#     layer1.log("Sending view render request")
-#     view_resp = await message_center.send_message(view_msg)
-#     window_id = view_resp['windowID']
-#     layer1.log("Frame list rendered in window: ", window_id)
-
-async def handleDidCaptureOCR(msg):
-    print('OCR captured!', msg)
-
-    ocr_list = await kvstore.get_json('ocr_list') or []
-    ocr_list.append(msg)
-
-    await kvstore.set_json('ocr_list', ocr_list)
-    await ai_prompt_task()
-
-# Handler for incoming events on the 'ui' channel
-# async def ui_handler(channel, event, msg):
-#     if event == 'notificationCallback':
-#         await handleNotificationCallback(msg)
+        await kvstore.set_json("activity_intervals", intervals)
+        await performOCR_task()
 
 # Handler for incoming events on the 'message' channel
 async def msg_handler(channel, event, msg):
@@ -298,10 +328,12 @@ async def msg_handler(channel, event, msg):
         return
 
     if event == 'performOCR':
-        last_timestamp = await kvstore.get_json("last_timestamp")
-        if not last_timestamp:
+        last_frame = await kvstore.get_json("last_frame")
+        if not last_frame or (get_timestamp() - int(last_frame['timestamp']) > 30):
+            layer1.log("performOCR event received but recording is not running")
+            await showNotification("Screen recording\nis not active!")
             return
-        await performOCR(int(last_timestamp['position']))
+        await performOCR((last_frame['timestamp'] - 60, last_frame['timestamp']))
         return
     
     if event == 'windowWillClose':
@@ -309,18 +341,26 @@ async def msg_handler(channel, event, msg):
         await kvstore.set("hidden", 1)
         return
 
+# Handler for incoming events on the 'system' channel
+async def system_handler(channel, event, msg):
+    if event in ('leftMouseUp', 'keyUp', 'scrollWheel'):
+        await handleUserActivity(msg['timestamp'])
+        return
+
 # Handler for incoming events on the 'recorder' channel
 async def recorder_handler(channel, event, msg):
     if event == 'didCaptureFrame':
-        await kvstore.set_json("last_timestamp", msg)
+        # layer1.log("Frame grabbed:", msg)
+        await kvstore.set_json("last_frame", msg)
         return
 
-    if event == 'didCaptureOCR':
-        await handleDidCaptureOCR(msg)
+    # if event == 'didCaptureOCR':
+    #     await handleDidCaptureOCR(msg)
 
 loop.create_task(register())
 # message_center.subscribe('ui', ui_handler)
 message_center.subscribe('messages', msg_handler)
+message_center.subscribe('system', system_handler)
 message_center.subscribe('recorder', recorder_handler)
 layer1.log("Waiting for extension triggers...")
 message_center.run() # Will run forever
