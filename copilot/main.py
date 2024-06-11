@@ -154,10 +154,10 @@ async def getCallEdgeIds():
     await kvstore.set_int('min_call_id', result[0]['min(id)'])
     await kvstore.set_int('max_call_id', result[0]['max(id)'])
 
-async def showWindow(html, prev=None, next=None, tag="main"):
-    lock = asyncio.Lock()
+ui_lock = asyncio.Lock()
 
-    async with lock:
+async def showWindow(html, prev=None, next=None, tag="main"):
+    async with ui_lock:
         view_msg = {
             "event": "ui.renderHTML",
             "data": {
