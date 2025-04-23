@@ -8,7 +8,7 @@ import os
 
 class MessageCenter:
     queue = {}
-    r = redis.Redis(host='localhost', port=6381, decode_responses=True)
+    r = redis.Redis(host='localhost', port=os.environ.get('REDIS_PORT', 6381), decode_responses=True)
     handlers = {}
 
     def __init__(self, loop):
