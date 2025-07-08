@@ -1,6 +1,6 @@
 {
     "version": "1.0.2",
-    "minLayer1Version": "1.2.8320",
+    "minReMyndVersion": "1.2.8320",
     "id": "55E8EDB7-234E-465A-BADE-B9A769414BD6",
     "description": "Automatically detects Slack Huddles, and records the audio with full transcription.",
     "name": "Slack Huddle Recording"

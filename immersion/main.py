@@ -1,4 +1,4 @@
-import layer1
+import remynd
 import asyncio
 import json
 import uuid
@@ -15,8 +15,8 @@ env = Environment(
 
 # Create a MessageCenter instance
 loop = asyncio.get_event_loop()
-message_center = layer1.MessageCenter(loop)
-kvstore = layer1.Dictionary(message_center.extension_id)
+message_center = remynd.MessageCenter(loop)
+kvstore = remynd.Dictionary(message_center.extension_id)
 
 def get_time():
     return time.time()
@@ -47,7 +47,7 @@ env.globals['timeStr'] = time_str
 env.globals['dumps'] = json.dumps
 
 async def register():
-    layer1.log("Extension ID:", message_center.extension_id)
+    remynd.log("Extension ID:", message_center.extension_id)
 
     reg_msg = {
         "event": "extension.register",
@@ -68,7 +68,7 @@ async def register():
     }
 
     reg_resp = await message_center.send_message(reg_msg)
-    layer1.log("Registration:", json.dumps(reg_resp, indent=4))
+    remynd.log("Registration:", json.dumps(reg_resp, indent=4))
 
     await kvstore.remove('window_id')
     # await kvstore.remove('ocr_list')
@@ -100,11 +100,11 @@ async def showWindow(html, prev=None, next=None, tag="main"):
         if window_id:
             view_msg['data']['windowID'] = window_id
 
-        layer1.log("Sending view render request")
+        remynd.log("Sending view render request")
         view_resp = await message_center.send_message(view_msg)
 
         window_id = view_resp['windowID']
-        layer1.log("HTML rendered in window: ", window_id)
+        remynd.log("HTML rendered in window: ", window_id)
         await kvstore.set_int('window_id', window_id)
         await kvstore.remove("hidden")
 
@@ -140,7 +140,7 @@ async def renderActivity():
 
 async def ai_prompt_task(ocr_list):
     if not ocr_list:
-        layer1.log('Empty OCR data in AI prompt task!')
+        remynd.log('Empty OCR data in AI prompt task!')
         return
 
     text = ""
@@ -165,7 +165,7 @@ async def ai_prompt_task(ocr_list):
     response = await message_center.send_message(msg)
     print("AI response: ", response)
 
-    layer1.log("Got AI reply, trigger UI notification...")
+    remynd.log("Got AI reply, trigger UI notification...")
 
     if 'text' in response:    
         # msg = {
@@ -213,7 +213,7 @@ async def performOCR_task():
 ocr_lock = asyncio.Lock()
 
 async def performOCR(interval):
-    layer1.log("OCR triggered:", interval[0], interval[1])
+    remynd.log("OCR triggered:", interval[0], interval[1])
 
     d = interval[1] - interval[0]
     n = int(d / 15) + 1
@@ -236,11 +236,11 @@ async def performOCR(interval):
             response = await message_center.send_message(msg)
 
             if not response.get('text'):
-                layer1.log("Got empty OCR result:", response)
+                remynd.log("Got empty OCR result:", response)
                 continue
 
             if abs(response['timestamp'] - timestamp) > 10:
-                layer1.log("Got irrelevent OCR result:", response)
+                remynd.log("Got irrelevent OCR result:", response)
                 continue
             
             ocr_list.append({
@@ -260,14 +260,14 @@ async def performOCR(interval):
                 await kvstore.set(f"bundle:{bundle_id}", app_icon)
 
         if not ocr_list:
-            layer1.log("No OCR results, skip activity interval")
+            remynd.log("No OCR results, skip activity interval")
             return
 
-        layer1.log("Got OCR results, trigger AI task...")
+        remynd.log("Got OCR results, trigger AI task...")
         await ai_prompt_task(ocr_list)
 
 async def showNotification(text):
-    layer1.log("Trigger UI notification...")
+    remynd.log("Trigger UI notification...")
     msg = {
         "event": "ui.showNotification",
         "data": {
@@ -279,11 +279,11 @@ async def showNotification(text):
         }
     }
     response = await message_center.send_message(msg)
-    layer1.log("Notification id:", response)
+    remynd.log("Notification id:", response)
     return response.get('notificationID')
 
 # async def handleDidCaptureOCR(msg):
-#     layer1.log('OCR captured:', msg['timestamp'], msg['appName'])
+#     remynd.log('OCR captured:', msg['timestamp'], msg['appName'])
 
 #     ocr_list = await kvstore.get_json('ocr_list') or []
 #     ocr_list.append(msg)
@@ -330,7 +330,7 @@ async def msg_handler(channel, event, msg):
     if event == 'performOCR':
         last_frame = await kvstore.get_json("last_frame")
         if not last_frame or (get_timestamp() - int(last_frame['timestamp']) > 30):
-            layer1.log("performOCR event received but recording is not running")
+            remynd.log("performOCR event received but recording is not running")
             await showNotification("Screen recording\nis not active!")
             return
         await performOCR((last_frame['timestamp'] - 60, last_frame['timestamp']))
@@ -350,7 +350,7 @@ async def system_handler(channel, event, msg):
 # Handler for incoming events on the 'recorder' channel
 async def recorder_handler(channel, event, msg):
     if event == 'didCaptureFrame':
-        # layer1.log("Frame grabbed:", msg)
+        # remynd.log("Frame grabbed:", msg)
         await kvstore.set_json("last_frame", msg)
         return
 
@@ -362,5 +362,5 @@ loop.create_task(register())
 message_center.subscribe('messages', msg_handler)
 message_center.subscribe('system', system_handler)
 message_center.subscribe('recorder', recorder_handler)
-layer1.log("Waiting for extension triggers...")
+remynd.log("Waiting for extension triggers...")
 message_center.run() # Will run forever

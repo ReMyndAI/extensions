@@ -1,4 +1,4 @@
-import layer1
+import remynd
 import asyncio
 import uuid
 import time
@@ -11,8 +11,8 @@ from html import escape
 # Create a MessageCenter instance
 extension_path = os.path.dirname(os.path.realpath(__file__))
 loop = asyncio.get_event_loop()
-message_center = layer1.MessageCenter(loop)
-kvstore = layer1.Dictionary(message_center.extension_id)
+message_center = remynd.MessageCenter(loop)
+kvstore = remynd.Dictionary(message_center.extension_id)
 
 # https://docs.python.org/3/library/configparser.html
 config = configparser.ConfigParser({
@@ -115,21 +115,21 @@ async def showWindow(result=''):
         event.preventDefault();
         var json = Object.fromEntries(new FormData(form1));
         json.id = form1.getAttribute("id");
-        window.webkit.messageHandlers.layer1.postMessage(json);
+        window.webkit.messageHandlers.remynd.postMessage(json);
     });
     form2 = document.getElementById("form2");
     form2.addEventListener("submit", event => {
         event.preventDefault();
         var json = Object.fromEntries(new FormData(form2));
         json.id = form2.getAttribute("id");
-        window.webkit.messageHandlers.layer1.postMessage(json);
+        window.webkit.messageHandlers.remynd.postMessage(json);
     });
     form3 = document.getElementById("form3");
     form3.addEventListener("submit", event => {
         event.preventDefault();
         var json = Object.fromEntries(new FormData(form3));
         json.id = form3.getAttribute("id");
-        window.webkit.messageHandlers.layer1.postMessage(json);
+        window.webkit.messageHandlers.remynd.postMessage(json);
     });
     """
     view_msg = {
@@ -147,11 +147,11 @@ async def showWindow(result=''):
     if window_id:
         view_msg['data']['windowID'] = window_id
 
-    layer1.log("Sending view render request")
+    remynd.log("Sending view render request")
     view_resp = await message_center.send_message(view_msg)
 
     window_id = view_resp['windowID']
-    layer1.log("HTML rendered in window: ", window_id)
+    remynd.log("HTML rendered in window: ", window_id)
     await kvstore.set_int('window_id', window_id)
 
     # small timeout needed to let DOM load properly
@@ -177,7 +177,7 @@ async def loadCalls(before, after=0):
             "db": "extras"
         }
     }
-    layer1.log("Sending sql request...")
+    remynd.log("Sending sql request...")
     response = await message_center.send_message(msg)
     result = response.get('result')
 
@@ -209,13 +209,13 @@ async def loadCalls(before, after=0):
             const resultElem = document.getElementById("calls");
             resultElem.innerHTML = `{items}`;
             document.getElementById("prev").onclick = function(e) {{
-                window.webkit.messageHandlers.layer1.postMessage({{id: 'form3', prev: {last_ts}}})
+                window.webkit.messageHandlers.remynd.postMessage({{id: 'form3', prev: {last_ts}}})
             }}
             document.getElementById("next").onclick = function(e) {{
-                window.webkit.messageHandlers.layer1.postMessage({{id: 'form3', next: {first_ts}}})
+                window.webkit.messageHandlers.remynd.postMessage({{id: 'form3', next: {first_ts}}})
             }}
             document.getElementById("filtered").onclick = function(e) {{
-                window.webkit.messageHandlers.layer1.postMessage({{id: 'form3', filter: JSON.parse(`{json.dumps(filter)}`)}})
+                window.webkit.messageHandlers.remynd.postMessage({{id: 'form3', filter: JSON.parse(`{json.dumps(filter)}`)}})
             }}
         }}
 
@@ -235,14 +235,14 @@ async def loadCalls(before, after=0):
         }
     }
 
-    layer1.log("Sending js script request")
+    remynd.log("Sending js script request")
     view_resp = await message_center.send_message(view_msg)
 
     if view_resp.get('windowID') == window_id:
-        layer1.log("JS executed succefully in window: ", window_id)
+        remynd.log("JS executed succefully in window: ", window_id)
         return True
     
-    layer1.log("Failed to execute js in window: ", window_id, view_resp)
+    remynd.log("Failed to execute js in window: ", window_id, view_resp)
     return False
 
 async def showSettings():
@@ -275,10 +275,10 @@ async def showSettings():
         event.preventDefault();
         var json = Object.fromEntries(new FormData(form));
         json.id = form.getAttribute("id");
-        window.webkit.messageHandlers.layer1.postMessage(json);
+        window.webkit.messageHandlers.remynd.postMessage(json);
     });
     document.getElementById("close").onclick = function(e) {
-        window.webkit.messageHandlers.layer1.postMessage({ id: 'settings', 'close': true });
+        window.webkit.messageHandlers.remynd.postMessage({ id: 'settings', 'close': true });
     };
     """
     view_msg = {
@@ -296,16 +296,16 @@ async def showSettings():
     if window_id:
         view_msg['data']['windowID'] = window_id
 
-    layer1.log("Sending view render request")
+    remynd.log("Sending view render request")
     view_resp = await message_center.send_message(view_msg)
 
     window_id = view_resp['windowID']
-    layer1.log("HTML rendered in window: ", window_id)
+    remynd.log("HTML rendered in window: ", window_id)
     await kvstore.set_int('settings_window_id', window_id)
 
 async def callSummary(call):
     call_id = call['id']
-    layer1.log('Summarize call: ', json.dumps(call, indent=4))
+    remynd.log('Summarize call: ', json.dumps(call, indent=4))
     script_msg = {
         "event": "layerScript.run",
         "data": {
@@ -313,13 +313,13 @@ async def callSummary(call):
             "scriptInput": str(call_id)
         }
     }
-    layer1.log("Sending summary request")
+    remynd.log("Sending summary request")
     summary_msg = await message_center.send_message(script_msg)
-    layer1.log("Got summary result")
+    remynd.log("Got summary result")
     summary_dict = json.loads(summary_msg['summary'])
     # kvstore.set(f'summary:{call_id}', summary_msg['summary'])
 
-    layer1.log("Render HTML window...")
+    remynd.log("Render HTML window...")
 
     participants = ", ".join(summary_dict['participants'])
     summary = summary_dict['summary']
@@ -371,10 +371,10 @@ async def callSummary(call):
     if window_id:
         view_msg['data']['windowID'] = window_id
 
-    layer1.log("Sending view render request")
+    remynd.log("Sending view render request")
     view_resp = await message_center.send_message(view_msg)
     window_id = view_resp['windowID']
-    layer1.log("Summary rendered in window: ", window_id)
+    remynd.log("Summary rendered in window: ", window_id)
 
     await kvstore.set_int('window_id', window_id)
 
@@ -382,14 +382,14 @@ async def windowList(msg):
     ts = msg['timestamp']
     pos = msg['position']
 
-    layer1.log("Show window list at: ", ts)
+    remynd.log("Show window list at: ", ts)
     img_msg = {
         "event": "recorder.getFrame",
         "data": {
             "position": pos
         }
     }
-    layer1.log("Sending getFrame request")
+    remynd.log("Sending getFrame request")
     msg = await message_center.send_message(img_msg)
     imageData = msg.get('imageData')
 
@@ -404,7 +404,7 @@ async def windowList(msg):
             """
         }
     }
-    layer1.log("Sending runSQL request")
+    remynd.log("Sending runSQL request")
     msg = await message_center.send_message(sql_msg)
 
     print(msg)
@@ -448,10 +448,10 @@ async def windowList(msg):
     else:
         view_msg['data']['html'] = html
 
-    layer1.log("Sending view render request")
+    remynd.log("Sending view render request")
     view_resp = await message_center.send_message(view_msg)
     window_id = view_resp['windowID']
-    layer1.log("List rendered in window: ", window_id)
+    remynd.log("List rendered in window: ", window_id)
 
     await kvstore.set_int('list_window_id', window_id)
 
@@ -477,7 +477,7 @@ async def handleJSCallback(msg):
                 }
             }
 
-            layer1.log("Sending closeWindow request...")
+            remynd.log("Sending closeWindow request...")
             response = await message_center.send_message(msg)
             print("Response: ", response)
             await kvstore.remove('settings_window_id')
@@ -513,7 +513,7 @@ async def handleJSCallback(msg):
             }
         }
 
-        layer1.log("Sending js script request")
+        remynd.log("Sending js script request")
         response = await message_center.send_message(view_msg)
         print("Response: ", response)
 
@@ -527,7 +527,7 @@ async def handleJSCallback(msg):
             }
         }
 
-        layer1.log("Sending ask request...")
+        remynd.log("Sending ask request...")
         response = await message_center.send_message(msg)
         print("Response: ", response)
         return
@@ -545,7 +545,7 @@ async def handleJSCallback(msg):
             }
         }
 
-        layer1.log("Sending search request...")
+        remynd.log("Sending search request...")
         response = await message_center.send_message(msg)
         print("Response: ", response)
         return
@@ -579,7 +579,7 @@ async def handleJSCallback(msg):
                 'description': f"Calls { date_str(filt[0]['startDate'])} - {date_str(filt[-1]['endDate'])}"
             }
 
-        layer1.log("Sending view request...")
+        remynd.log("Sending view request...")
         response = await message_center.send_message(msg)
         print("Response: ", response)
         return
@@ -669,5 +669,5 @@ message_center.subscribe('system', sys_handler)
 message_center.subscribe('calls', call_handler)
 message_center.subscribe('recorder', recorder_handler)
 
-layer1.log("Waiting for extension triggers...")
+remynd.log("Waiting for extension triggers...")
 message_center.run() # Will run forever

@@ -1,4 +1,4 @@
-import layer1
+import remynd
 import asyncio
 import json
 import uuid
@@ -7,14 +7,14 @@ import os
 
 # Create a MessageCenter instance
 loop = asyncio.get_event_loop()
-message_center = layer1.MessageCenter(loop)
-kvstore = layer1.Dictionary(message_center.extension_id)
+message_center = remynd.MessageCenter(loop)
+kvstore = remynd.Dictionary(message_center.extension_id)
 
 async def showWindow(query, db=None, result=''):
     window_id = await kvstore.get_int('window_id')
 
     if window_id and await updateWindow(window_id, result):
-        layer1.log("Window content updated")
+        remynd.log("Window content updated")
         return
 
     html = f"""
@@ -152,7 +152,7 @@ async def showWindow(query, db=None, result=''):
     formElem.addEventListener("submit", event => {
         event.preventDefault();
         const json = Object.fromEntries(new FormData(formElem));
-        window.webkit.messageHandlers.layer1.postMessage(json);
+        window.webkit.messageHandlers.remynd.postMessage(json);
     });
     hljs.highlightAll();
     """
@@ -170,10 +170,10 @@ async def showWindow(query, db=None, result=''):
     if window_id:
         view_msg['data']['windowID'] = window_id
 
-    layer1.log("Sending view render request")
+    remynd.log("Sending view render request")
     view_resp = await message_center.send_message(view_msg)
     window_id = view_resp['windowID']
-    layer1.log("HTML rendered in window: ", window_id)
+    remynd.log("HTML rendered in window: ", window_id)
     await kvstore.set_int('window_id', window_id)
 
 async def updateWindow(window_id, result=''):
@@ -196,14 +196,14 @@ async def updateWindow(window_id, result=''):
         }
     }
 
-    layer1.log("Sending js script request")
+    remynd.log("Sending js script request")
     view_resp = await message_center.send_message(view_msg)
 
     if view_resp.get('windowID') == window_id:
-        layer1.log("JS executed succefully in window: ", window_id)
+        remynd.log("JS executed succefully in window: ", window_id)
         return True
     
-    layer1.log("Failed to execute js in window: ", window_id, view_resp)
+    remynd.log("Failed to execute js in window: ", window_id, view_resp)
     return False
 
 async def handleJSCallback(msg):
@@ -221,7 +221,7 @@ async def handleJSCallback(msg):
             "db": db
         }
     }
-    layer1.log("Sending sql request...")
+    remynd.log("Sending sql request...")
     response = await message_center.send_message(msg)
     result = response.get('result')
 
@@ -246,5 +246,5 @@ async def msg_handler(channel, event, msg):
 
 loop.create_task(showWindow('SELECT * FROM FrameOCR LIMIT 10;'))
 message_center.subscribe('messages', msg_handler)
-layer1.log("Waiting for extension triggers...")
+remynd.log("Waiting for extension triggers...")
 message_center.run() # Will run forever

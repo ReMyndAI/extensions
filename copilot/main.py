@@ -1,4 +1,4 @@
-import layer1
+import remynd
 import asyncio
 import json
 import time
@@ -15,8 +15,8 @@ env = Environment(
 
 # Create a MessageCenter instance
 loop = asyncio.get_event_loop()
-message_center = layer1.MessageCenter(loop)
-kvstore = layer1.Dictionary(message_center.extension_id)
+message_center = remynd.MessageCenter(loop)
+kvstore = remynd.Dictionary(message_center.extension_id)
 
 def get_time():
     return time.time()
@@ -31,7 +31,7 @@ def time_str(ts):
     return datetime.fromtimestamp(ts).strftime("%X")
 
 async def register():
-    layer1.log("Extension ID:", message_center.extension_id)
+    remynd.log("Extension ID:", message_center.extension_id)
 
     reg_msg = {
         "event": "extension.register",
@@ -52,7 +52,7 @@ async def register():
     }
 
     reg_resp = await message_center.send_message(reg_msg)
-    layer1.log("Registration:", json.dumps(reg_resp, indent=4))
+    remynd.log("Registration:", json.dumps(reg_resp, indent=4))
 
     await kvstore.remove('entity')
     await kvstore.remove('window_id')
@@ -62,7 +62,7 @@ async def set_locale():
 
     try:
         # set locale from env variables
-        layer1.log("Set locale:", locale.setlocale(locale.LC_ALL, ''))
+        remynd.log("Set locale:", locale.setlocale(locale.LC_ALL, ''))
         return
     except:
         pass
@@ -78,12 +78,12 @@ async def set_locale():
 
         try:
             # set locale from env variables
-            layer1.log("Set locale:", locale.setlocale(locale.LC_ALL, lc))
+            remynd.log("Set locale:", locale.setlocale(locale.LC_ALL, lc))
             return
         except:
             pass
 
-    layer1.log("WARNING: Unable to set locale!")
+    remynd.log("WARNING: Unable to set locale!")
 
 def encode_image(path):
     with open(os.path.dirname(__file__) + '/' + path, "rb") as f:
@@ -108,7 +108,7 @@ async def getTranscription(call_id):
                 "db": "extras"
             }
         }
-        layer1.log(f"Sending sql request for transcription {count}...")
+        remynd.log(f"Sending sql request for transcription {count}...")
         response = await message_center.send_message(msg)
         result = response.get('result')
         count += 1
@@ -129,7 +129,7 @@ async def checkTranscription(call_id):
             "db": "extras"
         }
     }
-    layer1.log(f"Sending sql request for transcription...")
+    remynd.log(f"Sending sql request for transcription...")
     response = await message_center.send_message(msg)
     result = response.get('result')
 
@@ -144,7 +144,7 @@ async def getCallEdgeIds():
         }
     }
 
-    layer1.log(f"Sending sql request for max/min call ids...")
+    remynd.log(f"Sending sql request for max/min call ids...")
     response = await message_center.send_message(msg)
     result = response.get('result')
 
@@ -183,11 +183,11 @@ async def showWindow(html, prev=None, next=None, tag="main"):
         if window_id:
             view_msg['data']['windowID'] = window_id
 
-        layer1.log("Sending view render request")
+        remynd.log("Sending view render request")
         view_resp = await message_center.send_message(view_msg)
 
         window_id = view_resp['windowID']
-        layer1.log("HTML rendered in window: ", window_id)
+        remynd.log("HTML rendered in window: ", window_id)
         await kvstore.set_int('window_id', window_id)
 
 async def evaluateJavaScript(script):
@@ -203,9 +203,9 @@ async def evaluateJavaScript(script):
             "windowID": window_id
         }
     }
-    layer1.log("Sending view script request")
+    remynd.log("Sending view script request")
     view_resp = await message_center.send_message(script_msg)
-    layer1.log(view_resp)
+    remynd.log(view_resp)
     
     return True
 
@@ -226,14 +226,14 @@ async def showCallWindow(call, audio_url=None, offset=0, tab=None, no_push=False
 
     # don't reload window again for the same entity
     if prev_entity == entity and window_id:
-        layer1.log("Ignore window opening as it's already shown")
+        remynd.log("Ignore window opening as it's already shown")
 
         if tab:
             await selectCallTab(tab)
 
         return
 
-    layer1.log(f"Show window for the call {call['id']}, offset {offset}")
+    remynd.log(f"Show window for the call {call['id']}, offset {offset}")
     # NOTE: inject transcription and summary on 'loaded' js event
     # call['transcription'] = await getTranscription(call['id'])
     # call['summary'] = await getCallSummary(call['id'])
@@ -271,7 +271,7 @@ async def getCall(call_id, next=False, prev=False):
     elif prev:
         msg["data"]["sql"] = f"select * from Call where id < '{call_id}' order by id desc limit 1"
 
-    layer1.log(f"Sending sql request for call {call_id}...")
+    remynd.log(f"Sending sql request for call {call_id}...")
     response = await message_center.send_message(msg)
     result = response.get('result')
 
@@ -297,7 +297,7 @@ async def getCallSummary(call_id):
         }
     }
 
-    layer1.log(f"Select call {call_id} summary from EdgeDB...")
+    remynd.log(f"Select call {call_id} summary from EdgeDB...")
     response = await message_center.send_message(msg)
 
     if not response:
@@ -332,7 +332,7 @@ async def getCallList(participant):
                 "db": "extras"
             }
         }
-        layer1.log(f"Sending sql request for calls {count}...")
+        remynd.log(f"Sending sql request for calls {count}...")
         response = await message_center.send_message(msg)
         result = response.get('result')
         count += 1
@@ -425,7 +425,7 @@ async def showEntity(entity, no_push=False):
 async def updatePlayerPosition(timestamp):
     ignore_seek = await kvstore.get('ignore_seek')
     if ignore_seek:
-        layer1.log("Too soon, ignore updated position...")
+        remynd.log("Too soon, ignore updated position...")
         return
 
     script = f"track.currentTime = {timestamp} - startTime;"
@@ -441,7 +441,7 @@ async def viewPosition(timestamp, frame="closest"):
     }
     view_resp = await message_center.send_message(seek_msg)
     await kvstore.set("ignore_seek", "true", 2)
-    layer1.log("Position set: ", view_resp)
+    remynd.log("Position set: ", view_resp)
 
 async def setCallTitle(call_id, title):
     seek_msg = {
@@ -452,11 +452,11 @@ async def setCallTitle(call_id, title):
         }
     }
     view_resp = await message_center.send_message(seek_msg)
-    layer1.log("Title update:", view_resp)
+    remynd.log("Title update:", view_resp)
 
 async def handleJSCallback(msg):
     if 'log' in msg:
-        layer1.log(*msg['log'])
+        remynd.log(*msg['log'])
         return
 
     loaded = msg.get('loaded')
@@ -506,23 +506,23 @@ async def handleJSCallback(msg):
         await setCallTitle(call_id, call_title)
         return
 
-    layer1.log('Unhandled message:', msg)
+    remynd.log('Unhandled message:', msg)
 
 async def createSummary(call_id):
-    layer1.log('Create summary for call:', call_id)
+    remynd.log('Create summary for call:', call_id)
 
     call = await getCall(call_id)
 
     if not call.get('endDate'):
-        layer1.log("Call id not finished:", call_id)
+        remynd.log("Call id not finished:", call_id)
         return
     
     if call['endDate'] - call['startDate'] < 20:
-        layer1.log("Call is too short:", call_id)
+        remynd.log("Call is too short:", call_id)
         return
 
     if await checkTranscription(call_id) == False:
-        layer1.log("There's no transcription for call:", call_id)
+        remynd.log("There's no transcription for call:", call_id)
         return
 
     script_msg = {
@@ -535,7 +535,7 @@ async def createSummary(call_id):
     response = await message_center.send_message(script_msg)
     summary = response['output']
 
-    layer1.log("Saving summary to EdgeDB")
+    remynd.log("Saving summary to EdgeDB")
 
     save_msg = {
         "event": "edb.runEdgeQL",
@@ -548,12 +548,12 @@ async def createSummary(call_id):
         }
     }
     summary_resp = await message_center.send_message(save_msg)
-    layer1.log(summary_resp)
+    remynd.log(summary_resp)
 
     if await injectSummary(call_id=call_id):
         return
 
-    layer1.log("Trigger UI notification...")
+    remynd.log("Trigger UI notification...")
     msg = {
         "event": "ui.showNotification",
         "data": {
@@ -565,7 +565,7 @@ async def createSummary(call_id):
         }
     }
     response = await message_center.send_message(msg)
-    layer1.log("Notification id:", response)
+    remynd.log("Notification id:", response)
 
 async def injectSummary(call=None, call_id=None):
     template = env.get_template("summary.html")
@@ -581,7 +581,7 @@ async def injectSummary(call=None, call_id=None):
     if await kvstore.get('entity') != f"call:{call_id}":
         return False
 
-    layer1.log("Inject summary for call", call_id)
+    remynd.log("Inject summary for call", call_id)
 
     await evaluateJavaScript(f"""
         (() => {{ 
@@ -603,7 +603,7 @@ async def injectTranscription(call):
     if await kvstore.get('entity') != f"call:{call_id}":
         return False
 
-    layer1.log("Inject transcription for call", call_id)
+    remynd.log("Inject transcription for call", call_id)
 
     await evaluateJavaScript(f"""
         (() => {{ 
@@ -617,7 +617,7 @@ async def injectTranscription(call):
 
 async def handleNotificationCallback(msg):
     not_id = msg['notificationID']
-    layer1.log('Notification callback:', not_id)
+    remynd.log('Notification callback:', not_id)
     action = msg['action'].get('data')
 
     if not action:
@@ -635,7 +635,7 @@ async def ui_handler(channel, event, msg):
         await updatePlayerPosition(msg.get('timestamp'))
         return
 
-    layer1.log(f'Unhandled event: {event}:\n', json.dumps(msg, indent=4))
+    remynd.log(f'Unhandled event: {event}:\n', json.dumps(msg, indent=4))
 
 #     elif event == 'notificationCallback':
 #         await handleNotificationCallback(msg)
@@ -703,7 +703,7 @@ async def msg_handler(channel, event, msg):
 
 # Handler for incoming events on the 'call' channel
 async def call_handler(channel, event, msg):
-    layer1.log(f"{event}:\n", json.dumps(msg, indent=4))
+    remynd.log(f"{event}:\n", json.dumps(msg, indent=4))
 
     if event == 'callDidStart':
         await kvstore.set_int('max_call_id', msg['id'])
@@ -718,5 +718,5 @@ message_center.subscribe('ui', ui_handler)
 message_center.subscribe('messages', msg_handler)
 message_center.subscribe('calls', call_handler)
 
-layer1.log("Waiting for extension triggers...")
+remynd.log("Waiting for extension triggers...")
 message_center.run() # Will run forever

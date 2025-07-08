@@ -3,5 +3,5 @@
     "name": "Activity Log",
     "description": "Label user activity with short text notes in real time",
     "version": "1.0.3",
-    "minLayer1Version": "1.2.8369"
+    "minReMyndVersion": "1.2.8369"
 }

@@ -1,4 +1,4 @@
-import layer1
+import remynd
 import asyncio
 import json
 import uuid
@@ -7,8 +7,8 @@ import os
 
 # Create a MessageCenter instance
 loop = asyncio.get_event_loop()
-message_center = layer1.MessageCenter(loop)
-kvstore = layer1.Dictionary(message_center.extension_id)
+message_center = remynd.MessageCenter(loop)
+kvstore = remynd.Dictionary(message_center.extension_id)
 
 async def showWindow(query, result=''):
     html = f"""
@@ -35,7 +35,7 @@ async def showWindow(query, result=''):
     formElem.addEventListener("submit", event => {
         event.preventDefault();
         const json = Object.fromEntries(new FormData(formElem));
-        window.webkit.messageHandlers.layer1.postMessage(json)
+        window.webkit.messageHandlers.remynd.postMessage(json)
     });
     """
     view_msg = {
@@ -52,10 +52,10 @@ async def showWindow(query, result=''):
     if window_id:
         view_msg['data']['windowID'] = window_id
 
-    layer1.log("Sending view render request")
+    remynd.log("Sending view render request")
     view_resp = await message_center.send_message(view_msg)
     window_id = view_resp['windowID']
-    layer1.log("HTML rendered in window: ", window_id)
+    remynd.log("HTML rendered in window: ", window_id)
     await kvstore.set_int('window_id', window_id)
 
 async def handleJSCallback(msg):
@@ -71,7 +71,7 @@ async def handleJSCallback(msg):
             "sql": query
         }
     }
-    layer1.log("Sending sql request...")
+    remynd.log("Sending sql request...")
     response = await message_center.send_message(msg)
     result = response.get('result')
 
@@ -95,5 +95,5 @@ async def msg_handler(channel, event, msg):
 
 loop.create_task(showWindow('SELECT * FROM FrameOCR LIMIT 10;'))
 message_center.subscribe('messages', msg_handler)
-layer1.log("Waiting for extension triggers...")
+remynd.log("Waiting for extension triggers...")
 message_center.run() # Will run forever

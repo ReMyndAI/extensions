@@ -912,7 +912,7 @@
         let call_id = parseInt(c.getAttribute("data-id"));
         for (call of calls) {
             if (call.id == call_id) {
-                layer1.post({ call: call });
+                remynd.post({ call: call });
                 return;
             }
         }

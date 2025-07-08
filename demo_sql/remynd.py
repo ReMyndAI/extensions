@@ -44,7 +44,7 @@ class MessageCenter:
             except asyncio.CancelledError:
                 raise
             except:
-                log("Layer1 connection closed. Retrying...")
+                log("ReMynd connection closed. Retrying...")
                 await asyncio.sleep(1)
 
     def triage_msg(self, channel, msg):

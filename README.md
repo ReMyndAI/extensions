@@ -1,19 +1,19 @@
-# Layer1 Extension Guide
-This guide outlines the steps for creating your own Layer1 extensions. 
+# ReMynd Extension Guide
+This guide outlines the steps for creating your own ReMynd extensions. 
 
 ## About Extensions
-Layer1 extensions allow users to add custom functionality to their Layer1 experience. They can react to events broadcast by Layer1, inspect the state of other applications, display UI, record audio, and much more.
+ReMynd extensions allow users to add custom functionality to their ReMynd experience. They can react to events broadcast by ReMynd, inspect the state of other applications, display UI, record audio, and much more.
 
 Extensions can be built in one of two ways:
 
-- **Workflows:** Workflows are an easy way to implement logic using a drag-and-drop interface. No coding is necessary, and they provide helpers to integrate with the Layer1 database and AI backends.
+- **Workflows:** Workflows are an easy way to implement logic using a drag-and-drop interface. No coding is necessary, and they provide helpers to integrate with the ReMynd database and AI backends.
 Workflows are a good choice if your needs are simple and don't require extensive scripting.
-- **Python:** An extension can also include Python scripts for more advanced use cases. This allows you to run arbirtrary code and integrate with Layer1 at a deeper level. Python scripts are launched as background tasks that can run persistently.
+- **Python:** An extension can also include Python scripts for more advanced use cases. This allows you to run arbirtrary code and integrate with ReMynd at a deeper level. Python scripts are launched as background tasks that can run persistently.
 
 You can also use a combination of both methods: for example, a Python script can trigger a workflow to run with custom input.
 
 ### Extension Manager
-The Extension Manager is the interface where all extensions are managed. It can be found by clicking the Layer1 menu bar icon -> Extensions -> Extension Manager. 
+The Extension Manager is the interface where all extensions are managed. It can be found by clicking the ReMynd menu bar icon -> Extensions -> Extension Manager. 
 
 ## First Steps
 To create your own extension, click "Create Extension" in the lower left-hand corner of the Extension Manager. This will generate the necessary folder structure for your extension, including a `manifest.json` file. Click "Show in Finder" to view this folder in a Finder window.
@@ -25,7 +25,7 @@ Every extension requires a `manifest.json` file with the following keys:
 - `name`: Your extension's name.
 - `description`: A description for your extension.
 - `version`: The extension's current version number.
-- `minLayer1Version`: The minimum version of Layer1 supported by this extension. This should generally not be changed.
+- `minReMyndVersion`: The minimum version of ReMynd supported by this extension. This should generally not be changed.
 
 Do not edit the `manifest.json` file directly; instead update your extension's name, description and version in the Extension Manager UI.
 
@@ -44,57 +44,57 @@ Your workflow can optionally accept input provided as text. The `input` field in
 When triggered programatically (e.g. from a Python script), this input will be overridden. When triggered from the Ask window, the input will be a query provided by the user.
 
 ### Ask Integration
-By selecting "Enable workflow for Ask", your workflow will become available as a custom script in the Layer1 Ask window. This allows you to override the default Ask behavior with custom logic.
+By selecting "Enable workflow for Ask", your workflow will become available as a custom script in the ReMynd Ask window. This allows you to override the default Ask behavior with custom logic.
 The input provided to your workflow will be the query entered by the user in the Ask window.
 
 ### Steps
-Add as many steps to your workflow as needed. You can request LLM text generation, query the Layer1 database, run scripts, and more. Each step contains a Help menu for extra assistance.
+Add as many steps to your workflow as needed. You can request LLM text generation, query the ReMynd database, run scripts, and more. Each step contains a Help menu for extra assistance.
 
 ### Output
 The output of the final step in your workflow, if any, will be returned as the final result. This result will be displayed to the user in the Ask window if enabled.
 
 ## Python
-To add your own Python code and enable background execution, click "Add Python Script" at the top of the window. This adds a `main.py` file to your extension directory, along with the required `layer1.py` library.
+To add your own Python code and enable background execution, click "Add Python Script" at the top of the window. This adds a `main.py` file to your extension directory, along with the required `remynd.py` library.
 
 **Important:** Your main Python script must be named `main.py`, and it must execute `message_center.run()` at the end to run in persistently in the background. This is implemented for you in the generated script:
 
 ```python
-import layer1
+import remynd
 import asyncio
 
 # Create a MessageCenter instance
 loop = asyncio.get_event_loop()
-message_center = layer1.MessageCenter(loop)
+message_center = remynd.MessageCenter(loop)
 
 # Your code here
 
-layer1.log("Listening for incoming messages...")
+remynd.log("Listening for incoming messages...")
 message_center.run() # Will run forever
 ```
 
 ### Python version
-The Layer1 app bundle includes the Python 3.11 runtime for running extension code. The Python standard library and some basic modules are included in this installation, but any extra modules required by an extension should be included inside its folder.
+The ReMynd app bundle includes the Python 3.11 runtime for running extension code. The Python standard library and some basic modules are included in this installation, but any extra modules required by an extension should be included inside its folder.
 
 ### Redis
-All communication between extensions and Layer1 happens via Redis channels. The Redis server is packaged with Layer1 and is launched at app startup. Extensions do not need to worry about the details of this communication, and should use the `MessageCenter` APIs in the `layer1` module to communicate with the app.
+All communication between extensions and ReMynd happens via Redis channels. The Redis server is packaged with ReMynd and is launched at app startup. Extensions do not need to worry about the details of this communication, and should use the `MessageCenter` APIs in the `remynd` module to communicate with the app.
 
-### Layer1 library
-A module named `layer1` is required for extensions to communicate with the parent app. The library is fully self-contained in the `layer1.py` file; this file should be packaged with your extension.
+### ReMynd library
+A module named `remynd` is required for extensions to communicate with the parent app. The library is fully self-contained in the `remynd.py` file; this file should be packaged with your extension.
 
 #### MessageCenter
-Create an instance of `MessageCenter` to handle communication with Layer1.
+Create an instance of `MessageCenter` to handle communication with ReMynd.
 
-You can subscribe to app events broadcast by Layer1 using the `subscribe` method:
+You can subscribe to app events broadcast by ReMynd using the `subscribe` method:
 
 ```python
 async def event_handler(channel, event, msg):
-    layer1.log(f"Got an event message: {event}")
+    remynd.log(f"Got an event message: {event}")
 
 # Subscribes to all events on the "calls" channel
 message_center.subscribe('calls', event_handler)
 ```
 
-You can send messages to Layer1 using `send_message`:
+You can send messages to ReMynd using `send_message`:
 
 ```python
 my_msg = {
@@ -114,16 +114,16 @@ Supported message types are outlined below.
 Log messages to the Extension Manager console like this:
 
 ```python
-layer1.log("This is a log message!")
+remynd.log("This is a log message!")
 ```
 
 #### Dictionary
 
-You can also use `layer1.Dictionary` to store non-critical data in Redis. For a more complex example see `demo/main.py`.
+You can also use `remynd.Dictionary` to store non-critical data in Redis. For a more complex example see `demo/main.py`.
 
 ### Debugging
 
-You can run and debug your extension directly from an editor such as VS Code while the Layer1 app is running. It is not required for Layer1 to launch your extension process for debugging purposes.
+You can run and debug your extension directly from an editor such as VS Code while the ReMynd app is running. It is not required for ReMynd to launch your extension process for debugging purposes.
 
 
 ## Events (Notifications)
@@ -255,7 +255,7 @@ Below is a list of channels used to broadcast app-wide events. An extension may 
 
 ### `recorder` channel
 
-* `didCaptureFrame` Layer1 recorder captured a new frame
+* `didCaptureFrame` ReMynd recorder captured a new frame
 <details>
 <summary><b>Example</b> (click to expand)</summary>
 
@@ -275,7 +275,7 @@ Below is a list of channels used to broadcast app-wide events. An extension may 
 ```
 </details>
 
-* `didCaptureOCR` Layer1 recorder captured new OCR data from the focused window
+* `didCaptureOCR` ReMynd recorder captured new OCR data from the focused window
 <details>
 <summary><b>Example</b> (click to expand)</summary>
 
@@ -300,7 +300,7 @@ Below is a list of channels used to broadcast app-wide events. An extension may 
 
 ### `calls` channel
 
-* `callDidStart` Layer1 detected a new call (Zoom, etc.)
+* `callDidStart` ReMynd detected a new call (Zoom, etc.)
 <details>
 <summary><b>Example</b> (click to expand)</summary>
 
@@ -318,7 +318,7 @@ Below is a list of channels used to broadcast app-wide events. An extension may 
 ```
 </details>
 
-* `callDidEnd` Layer1 detected a call end
+* `callDidEnd` ReMynd detected a call end
 <details>
 <summary><b>Example</b> (click to expand)</summary>
 
@@ -410,9 +410,9 @@ In order to send a message to the `messages` channel use the `message_center.sen
 
 ```JavaScript
 {
-    // Any data passed from within JS using `layer1` message handler
+    // Any data passed from within JS using `remynd` message handler
     // For example:
-    // window.webkit.messageHandlers.layer1.postMessage({ id: 'settings', close: true });
+    // window.webkit.messageHandlers.remynd.postMessage({ id: 'settings', close: true });
     "id": "settings",
     "close": true
 }
@@ -954,7 +954,7 @@ Response:
 
 ### `ai` functions
 
-* `ai.query` Run AI query on the main Layer1 backend.
+* `ai.query` Run AI query on the main ReMynd backend.
 
 <details>
 <summary><b>Example</b> (click to expand)</summary>
@@ -989,7 +989,7 @@ Response:
 
 ### `sql` functions
 
-* `sql.runSQL` Run arbitrary SQL statement on the main Layer1 SQLite database (read-only).
+* `sql.runSQL` Run arbitrary SQL statement on the main ReMynd SQLite database (read-only).
 
 <details>
 <summary><b>Example</b> (click to expand)</summary>
@@ -1305,7 +1305,7 @@ Response:
 
 ### `edb` functions
 
-* `edb.runEdgeQL` Run an artibtrary EdgeQL query on the main Layer1 EdgeDB database.
+* `edb.runEdgeQL` Run an artibtrary EdgeQL query on the main ReMynd EdgeDB database.
 <details>
 <summary><b>Example</b> (click to expand)</summary>
 

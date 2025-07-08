@@ -20,15 +20,15 @@
     {% block content %}
     {% endblock %}
     <script>
-        layer1 = {};
-        layer1.post = function(obj) {
-            window.webkit.messageHandlers.layer1.postMessage(obj);
+        remynd = {};
+        remynd.post = function(obj) {
+            window.webkit.messageHandlers.remynd.postMessage(obj);
         }
-        layer1.log = function(...args) {
-            layer1.post({ log: args });
+        remynd.log = function(...args) {
+            remynd.post({ log: args });
         };
         console = console || {};
-        console.log = layer1.log;
+        console.log = remynd.log;
         {% block script %}
         {% endblock %}
     </script>

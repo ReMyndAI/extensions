@@ -1,4 +1,4 @@
-import layer1
+import remynd
 import asyncio
 import json
 import uuid
@@ -7,12 +7,12 @@ import os
 
 # Create a MessageCenter instance
 loop = asyncio.get_event_loop()
-message_center = layer1.MessageCenter(loop)
-kvstore = layer1.Dictionary(message_center.extension_id)
+message_center = remynd.MessageCenter(loop)
+kvstore = remynd.Dictionary(message_center.extension_id)
 
 async def handleNotificationCallback(msg):
     not_id = msg['notificationID']
-    layer1.log('Notification callback: ', not_id)
+    remynd.log('Notification callback: ', not_id)
     timestamps = msg['action'].get('data')
     if timestamps is None:
         return
@@ -36,10 +36,10 @@ async def handleNotificationCallback(msg):
             "height": 600
         }
     }
-    layer1.log("Sending view render request")
+    remynd.log("Sending view render request")
     view_resp = await message_center.send_message(view_msg)
     window_id = view_resp['windowID']
-    layer1.log("Frame list rendered in window: ", window_id)
+    remynd.log("Frame list rendered in window: ", window_id)
 
 async def handleDidCaptureFrame(msg):
     print('Frame captured!', msg)
@@ -56,7 +56,7 @@ async def handleDidCaptureFrame(msg):
         return
     
     await kvstore.remove('frame_count')
-    layer1.log("Trigger UI notification...")
+    remynd.log("Trigger UI notification...")
     
     msg = {
         "event": "ui.showNotification",
@@ -82,5 +82,5 @@ async def recorder_handler(channel, event, msg):
 
 message_center.subscribe('ui', ui_handler)
 message_center.subscribe('recorder', recorder_handler)
-layer1.log("Waiting for extension triggers...")
+remynd.log("Waiting for extension triggers...")
 message_center.run() # Will run forever

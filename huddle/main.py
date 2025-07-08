@@ -1,4 +1,4 @@
-import layer1
+import remynd
 import asyncio
 import json
 import uuid
@@ -6,7 +6,7 @@ import objectpath
 
 # Create a MessageCenter instance
 loop = asyncio.get_event_loop()
-message_center = layer1.MessageCenter(loop)
+message_center = remynd.MessageCenter(loop)
 
 poll_task = None
 
@@ -24,12 +24,12 @@ async def show_recording_msg(isRecording):
             "html": html
         }
     }
-    layer1.log("Sending view render request")
+    remynd.log("Sending view render request")
     status = await message_center.send_message(view_msg)
-    layer1.log("Render status: ", status)
+    remynd.log("Render status: ", status)
 
 async def start_recording(pid):
-    layer1.log("Starting huddle recording")
+    remynd.log("Starting huddle recording")
     msg = {
         'event': 'recorder.startCallRecording',
         'data': {
@@ -38,12 +38,12 @@ async def start_recording(pid):
     }
     resp = await message_center.send_message(msg)
     if 'error' in resp:
-        layer1.log("Error starting huddle recording: ", resp['error'])
+        remynd.log("Error starting huddle recording: ", resp['error'])
     else:
         await show_recording_msg(True)
 
 async def stop_recording(pid):
-    layer1.log("Stopping huddle recording")
+    remynd.log("Stopping huddle recording")
     msg = {
         'event': 'recorder.stopCallRecording',
         'data': {
@@ -108,30 +108,30 @@ async def poll_slack_ax(pid):
     await enable_electron_ax(pid)
     
     while True:
-        layer1.log("Polling Slack...")
+        remynd.log("Polling Slack...")
         try:
             huddle_controls = await find_huddle_controls(pid)
             if huddle_controls:
-                layer1.log("Huddle controls found")
+                remynd.log("Huddle controls found")
                 if not on_call:
                     # Huddle was just started/discovered; start recording now
                     await start_recording(pid)
                     on_call = True
             else:
-                layer1.log("Huddle controls not found")
+                remynd.log("Huddle controls not found")
                 if on_call:
                     # Huddle just ended; stop recording now
                     await stop_recording(pid)
                     on_call = False
             # if huddle_controls == None:
             #     # Find top-level huddle controls in full AX tree
-            #     layer1.log("Looking for Huddle controls container...")
+            #     remynd.log("Looking for Huddle controls container...")
             #     huddle_controls = await find_huddle_controls(pid)
             # if huddle_controls:
-            #     layer1.log("Huddle controls container found")
+            #     remynd.log("Huddle controls container found")
             #     # Check for Gallery within huddle controls element
             #     is_call = await find_gallery(huddle_controls)
-            #     layer1.log("Call gallery discovered: ", is_call)
+            #     remynd.log("Call gallery discovered: ", is_call)
             #     if is_call and not on_call:
             #         # Huddle was just started; start recording now
             #         await start_recording(pid)
@@ -140,9 +140,9 @@ async def poll_slack_ax(pid):
             #         await stop_recording(pid)
             #     on_call = is_call
             # else:
-            #     layer1.log("Huddle controls container not found")
+            #     remynd.log("Huddle controls container not found")
         except Exception as e:
-            layer1.log(e)
+            remynd.log(e)
             # Exception was raised; likely the AX element became invalid
             # Force a full AX tree refresh
             huddle_controls = None
@@ -151,7 +151,7 @@ async def poll_slack_ax(pid):
         await asyncio.sleep(5)
 
 async def check_slack_running():
-    layer1.log("Checking for existing Slack instance...")
+    remynd.log("Checking for existing Slack instance...")
     def is_slack(app):
         return 'bundleID' in app and app['bundleID'] == 'com.tinyspeck.slackmacgap'
     msg = {
@@ -162,24 +162,24 @@ async def check_slack_running():
     slack_proc = next(filter(lambda app: is_slack(app), apps), None)
     if slack_proc:
         # Slack is running; start polling AX now
-        layer1.log("Slack is running, will start polling")
+        remynd.log("Slack is running, will start polling")
         global poll_task
         poll_task = loop.create_task(poll_slack_ax(slack_proc['pid']))
     else:
-        layer1.log("Slack not running, will observe app launch")
+        remynd.log("Slack not running, will observe app launch")
 
 async def sys_handler(channel, event, msg):
     if event == 'applicationDidLaunch':
         if 'bundleID' in msg and msg['bundleID'] == 'com.tinyspeck.slackmacgap':
             # Slack launched; poll huddle status
-            layer1.log("Slack launched")
+            remynd.log("Slack launched")
             global poll_task
             pid = msg['pid']
             poll_task = loop.create_task(poll_slack_ax(pid))
     elif event == 'applicationDidTerminate':
         if 'bundleID' in msg and msg['bundleID'] == 'com.tinyspeck.slackmacgap':
             # Slack no longer running; cancel polling
-            layer1.log("Slack terminated")
+            remynd.log("Slack terminated")
             poll_task.cancel()
 
 # Check once at startup if Slack is already running
@@ -188,5 +188,5 @@ loop.create_task(check_slack_running())
 
 # Register event handler and start the message center
 message_center.subscribe('system', sys_handler)
-layer1.log("Waiting for Slack huddles...")
+remynd.log("Waiting for Slack huddles...")
 message_center.run() # Will run forever

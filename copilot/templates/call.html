@@ -737,11 +737,11 @@
         firstUpdate = false;
       } else {
         if (offset < 10 || (track.duration < 20 && offset < track.duration / 2)) {
-          layer1.post({timeUpdate: startTime + offset, frame: "trailing"});
+          remynd.post({timeUpdate: startTime + offset, frame: "trailing"});
         } else if (track.duration - offset < 10 || (track.duration < 20 && offset > track.duration / 2)) {
-          layer1.post({timeUpdate: Math.min(endTime, startTime + offset), frame: "leading"});
+          remynd.post({timeUpdate: Math.min(endTime, startTime + offset), frame: "leading"});
         } else {
-          layer1.post({timeUpdate: startTime + offset, frame: "closest"});
+          remynd.post({timeUpdate: startTime + offset, frame: "closest"});
         }
       }
 
@@ -849,7 +849,7 @@
         }
       }
       syncVisibility();
-      layer1.post({ tab: el.id });
+      remynd.post({ tab: el.id });
     }
 
     function selectTab(name) {
@@ -889,7 +889,7 @@
 
         if (summaryButton) {
             summaryButton.onclick = (event) => {
-                layer1.post({ summary: {{ call['id'] }} });
+                remynd.post({ summary: {{ call['id'] }} });
                 event.target.textContent = "Generating summary…";
                 event.target.classList.add("clicked");
                 event.target.onclick = null;
@@ -901,7 +901,7 @@
 
     for (let p of document.querySelectorAll(".participant")) {
       p.onclick = (event) => {
-          layer1.post({ participant: p.textContent });
+          remynd.post({ participant: p.textContent });
       };
     }
 
@@ -926,7 +926,7 @@
 
     window.onload = (event) => {
       resizeScrollView();
-      layer1.post({ loaded: "call:{{ call['id'] }}" });
+      remynd.post({ loaded: "call:{{ call['id'] }}" });
     };
 
     document.onkeydown = (event) => {
@@ -974,7 +974,7 @@
             var newTitle = event.target.textContent.replaceAll("\n", " ").trim();
             if (newTitle && newTitle != callTitle) {
                 callTitle = newTitle;
-                layer1.post({ title: newTitle, callId: {{ call['id'] }} });
+                remynd.post({ title: newTitle, callId: {{ call['id'] }} });
             }
             event.target.blur()
             event.preventDefault();
