@@ -726,15 +726,14 @@
     var segments = document.querySelectorAll(".transcript-section");
     var activeSegment = undefined;
     var activeTopic = undefined;
-    var firstUpdate = true;
 
     function activeTab() {
       return document.querySelector(".path-indicator-active").id; 
     }
 
     function onTimeUpdate(offset) {
-      if (firstUpdate) {
-        firstUpdate = false;
+      if (offset == null) {
+        offset = track.currentTime;
       } else {
         if (offset < 10 || (track.duration < 20 && offset < track.duration / 2)) {
           remynd.post({timeUpdate: startTime + offset, frame: "trailing"});
@@ -809,11 +808,15 @@
     };
 
     track.onloadedmetadata = (event) => {
-      track.currentTime = Math.min(initialOffset, track.duration);
-    };
+        track.currentTime = Math.min(initialOffset, track.duration);
+        onTimeUpdate(null);
 
-    track.ontimeupdate = (event) => {
-      onTimeUpdate(track.currentTime);
+        // Ignore updates first 1 sec
+        setTimeout(() => {
+            track.ontimeupdate = (event) => {
+                onTimeUpdate(track.currentTime);
+            };
+        }, 1000);
     };
 
     function syncVisibility() {

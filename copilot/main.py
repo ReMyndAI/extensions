@@ -467,11 +467,13 @@ async def handleJSCallback(msg):
             call = await getCall(call_id)
             await injectTranscription(call)
             await injectSummary(call=call)
+            remynd.log("Call loaded:", call_id)
         return
 
     timestamp = msg.get('timeUpdate')
 
     if timestamp:
+        remynd.log("Time update:", timestamp)
         await viewPosition(timestamp, frame=msg.get('frame', 'closest'))
         return
 
@@ -587,7 +589,7 @@ async def injectSummary(call=None, call_id=None):
         (() => {{ 
             document.querySelector(".summary-content").innerHTML = `{html}`;
             updateTopics();
-            onTimeUpdate(track.currentTime);
+            onTimeUpdate(null);
         }})();
     """)
 
@@ -609,7 +611,7 @@ async def injectTranscription(call):
         (() => {{ 
             document.querySelector(".transcript-items").innerHTML = `{html}`;
             updateTranscript();
-            onTimeUpdate(track.currentTime);
+            onTimeUpdate(null);
         }})();
     """)
 
