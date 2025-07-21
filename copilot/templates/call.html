@@ -735,7 +735,9 @@
       if (offset == null) {
         offset = track.currentTime;
       } else {
-        if (offset < 10 || (track.duration < 20 && offset < track.duration / 2)) {
+        if (isNaN(track.duration)) {
+          remynd.post({timeUpdate: startTime + offset, frame: "closest"});
+        } else if (offset < 10 || (track.duration < 20 && offset < track.duration / 2)) {
           remynd.post({timeUpdate: startTime + offset, frame: "trailing"});
         } else if (track.duration - offset < 10 || (track.duration < 20 && offset > track.duration / 2)) {
           remynd.post({timeUpdate: Math.min(endTime, startTime + offset), frame: "leading"});
@@ -808,7 +810,11 @@
     };
 
     track.onloadedmetadata = (event) => {
-        track.currentTime = Math.min(initialOffset, track.duration);
+        if (!isNaN(track.duration)) {
+            track.currentTime = Math.min(initialOffset, track.duration);
+        } else {
+            track.currentTime = initialOffset;
+        }
         onTimeUpdate(null);
 
         // Ignore updates first 1 sec
@@ -872,20 +878,24 @@
 
     function updateTranscript() {
         segments = document.querySelectorAll(".transcript-section");
-        for (let s of segments) {
-            s.onclick = (event) => {
-                track.currentTime = Math.min(parseFloat(s.getAttribute("data-time")), track.duration);
-            };
+        if (!isNaN(track.duration)) {
+            for (let s of segments) {
+                s.onclick = (event) => {
+                    track.currentTime = Math.min(parseFloat(t.parentNode.getAttribute("data-time")), track.duration);
+                };
+            }
         }
     }
 
     updateTranscript();
 
     function updateTopics() {
-        for (let t of document.querySelectorAll(".topic-title")) {
-            t.onclick = (event) => {
-                track.currentTime = Math.min(parseFloat(t.parentNode.getAttribute("data-time")), track.duration);
-            };
+        if (!isNaN(track.duration)) {
+            for (let t of document.querySelectorAll(".topic-title")) {
+                t.onclick = (event) => {
+                    track.currentTime = Math.min(parseFloat(t.parentNode.getAttribute("data-time")), track.duration);
+                };
+            }
         }
 
         const summaryButton = document.getElementById("summary-button");
@@ -939,6 +949,10 @@
         if (document.activeElement && document.activeElement.tagName != "BODY") {
             return;
         }
+        if (!isNaN(track.duration)) {
+            return;
+        }
+
         if (event.code == "Space") {
             if (track.paused) {
                 track.play();

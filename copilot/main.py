@@ -428,7 +428,14 @@ async def updatePlayerPosition(timestamp):
         remynd.log("Too soon, ignore updated position...")
         return
 
-    script = f"track.currentTime = {timestamp} - startTime;"
+    script = f"""
+track.currentTime = {timestamp} - startTime;
+
+if (isNaN(track.duration))
+{{
+    onTimeUpdate(null);    
+}}
+"""
     await evaluateJavaScript(script)
 
 async def viewPosition(timestamp, frame="closest"):
