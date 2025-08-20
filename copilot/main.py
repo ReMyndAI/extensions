@@ -304,19 +304,37 @@ async def getCallSummary(call_id):
         return
     
     summary = response[0]['summary']
+    summary_created_at = None
 
     try:
-        # try to unpack JSON summary
-        summary = json.loads(summary)
+        # try to unpack JSON summary with metadata
+        summary_data = json.loads(summary)
+        
+        # Check if this is the new format with metadata
+        if isinstance(summary_data, dict) and 'content' in summary_data and 'createdAt' in summary_data:
+            # New format: extract content and creation date
+            summary = summary_data['content']
+            summary_created_at = summary_data['createdAt']
+        else:
+            # Old format: treat as regular summary
+            summary = summary_data
 
-        for t in summary:
-            t['start'] = datetime.fromisoformat(t['start']).replace(tzinfo=timezone.utc).timestamp()
-            t['end'] = datetime.fromisoformat(t['end']).replace(tzinfo=timezone.utc).timestamp()
-    except:
+        # Process the actual summary content
+        if isinstance(summary, list):
+            for t in summary:
+                if isinstance(t, dict) and 'start' in t and 'end' in t:
+                    t['start'] = datetime.fromisoformat(t['start']).replace(tzinfo=timezone.utc).timestamp()
+                    t['end'] = datetime.fromisoformat(t['end']).replace(tzinfo=timezone.utc).timestamp()
+    except Exception as e:
+        remynd.log(f"Failed fetching summary data: {e}")
         # fallback to string summary
         pass
 
-    return summary
+    # Return both summary and creation date
+    return {
+        'summary': summary,
+        'createdAt': summary_created_at
+    }
 
 async def getCallList(participant):
     calls = []
@@ -542,17 +560,26 @@ async def createSummary(call_id):
         }
     }
     response = await message_center.send_message(script_msg)
-    summary = response['output']
+    summary = json.loads(response['output'])
 
     remynd.log("Saving summary to EdgeDB")
 
+    # Get current UTC timestamp and create summary with metadata
+    current_utc = datetime.now(timezone.utc).isoformat()
+    
+    # Create summary object with metadata
+    summary_with_metadata = {
+        "content": summary,
+        "createdAt": current_utc
+    }
+    
     save_msg = {
         "event": "edb.runEdgeQL",
         "data": {
             "query": "update Call filter .callID = <int64>$callID set { summary := <str>$summary };",
             "variables": {
                 "callID": call_id,
-                "summary": summary
+                "summary": json.dumps(summary_with_metadata)
             }
         }
     }
@@ -584,7 +611,10 @@ async def injectSummary(call=None, call_id=None):
         call_id = call['id']
 
     # TODO: prepare summary instead of making query
-    call['summary'] = await getCallSummary(call_id)
+    summary_data = await getCallSummary(call_id)
+    if summary_data:
+        call['summary'] = summary_data['summary']
+        # call['summaryCreatedAt'] = summary_data['createdAt']
     html = template.render(call=call).replace('`', '\`')
 
     if await kvstore.get('entity') != f"call:{call_id}":
