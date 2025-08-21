@@ -479,6 +479,16 @@ async def setCallTitle(call_id, title):
     view_resp = await message_center.send_message(seek_msg)
     remynd.log("Title update:", view_resp)
 
+async def shareCall(call_id):
+    seek_msg = {
+        "event": "calls.shareUrl",
+        "data": {
+            "callID": call_id
+        }
+    }
+    view_resp = await message_center.send_message(seek_msg)
+    remynd.log("Call share:", view_resp)
+
 async def handleJSCallback(msg):
     if 'log' in msg:
         remynd.log(*msg['log'])
@@ -587,13 +597,14 @@ async def createSummary(call_id):
     remynd.log(summary_resp)
 
     if await injectSummary(call_id=call_id):
-        return
+        # return
+        pass
 
     remynd.log("Trigger UI notification...")
     msg = {
         "event": "ui.showNotification",
         "data": {
-            "text": "Call summary is ready.\nClick here to view.",
+            "text": "Call summary is ready.\nClick here to share.",
             "action": {
                 # "title": "See summary »",
                 "data": f"summary:{call_id}"
@@ -664,8 +675,7 @@ async def handleNotificationCallback(msg):
     
     if action.startswith("summary:"):
         call_id = int(action.split(":")[-1])
-        call = await getCall(call_id)
-        await showCallWindow(call, tab="summary", jump_to=True)
+        await shareCall(call_id)
         return
 
 # Handler for incoming events on the 'ui' channel
