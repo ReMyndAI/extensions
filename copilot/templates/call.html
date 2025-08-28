@@ -881,7 +881,7 @@
         if (!isNaN(track.duration)) {
             for (let s of segments) {
                 s.onclick = (event) => {
-                    track.currentTime = Math.min(parseFloat(t.parentNode.getAttribute("data-time")), track.duration);
+                    track.currentTime = Math.min(parseFloat(s.getAttribute("data-time")), track.duration);
                 };
             }
         }
