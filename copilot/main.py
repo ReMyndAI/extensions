@@ -151,8 +151,10 @@ async def getCallEdgeIds():
     if not result:
         return
     
-    await kvstore.set_int('min_call_id', result[0]['min(id)'])
-    await kvstore.set_int('max_call_id', result[0]['max(id)'])
+    if result[0]['min(id)']:
+        await kvstore.set_int('min_call_id', result[0]['min(id)'])
+    if result[0]['max(id)']:
+        await kvstore.set_int('max_call_id', result[0]['max(id)'])
 
 ui_lock = asyncio.Lock()
 
